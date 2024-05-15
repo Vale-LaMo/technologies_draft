@@ -1,6 +1,8 @@
 #'  This code performs a random assignment of 10 technologies per assessor and
 #'  taking into account that each technology is evaluated by exactly 10
 #'  assessors
+#'  
+#'  ASSESSORS DATA IN THE INPUT AND OUTPUT FILES SHOULD NOT BE SHARED
 
 library(readxl)
 library(dplyr)
@@ -17,7 +19,7 @@ n <- 10
 # max value allowed to st_deviation of n assessors per technology
 st_dev_limit <- 2
 
-st_dev <- 100 # initialize standard eviation
+st_dev <- 100 # initialize standard deviation
 verbose <- FALSE # if TRUE more details are returned on screen
 
 while (st_dev > st_dev_limit) {
@@ -66,5 +68,5 @@ assignments <- assessors %>% bind_cols(assignments)
 assignments
 View(assignments)
 
-write.csv(assignments,"C:\\Users\\tim_adriaens\\Documents\\GitHub\\technologies\\Data\\assignments.csv", row.names = FALSE)
+write.csv(assignments,"00_preliminary_steps/Assignements/assignments.csv", row.names = FALSE)
 
