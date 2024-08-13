@@ -10,6 +10,6 @@ Please note this data is not anonymized
 
 ## PII_data_management
 This folder contains scripts and data used for the anonymization process.
-Please note this data is not anonymized, only the anonymized output "scores_anonymised.csv" and "scores_anonymised.xlsx" will be shared in the Data folder as a starting point for the subsequent analyses.
+Please note this data is not anonymized, only the anonymized output "scores_anonymised.csv" and "scores_anonymised.xlsx" will be shared in the data folder as a starting point for the subsequent analyses.
 The coders translation table provides the link between the ID of the assessors (coder field) and the names (E-mailadres field).
 
