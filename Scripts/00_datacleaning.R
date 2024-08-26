@@ -178,3 +178,9 @@ rm(list = setdiff(ls(), objects_to_keep))
 # Optionally, confirm which objects remain in the workspace
 remaining_objects <- ls()
 cat("Remaining objects in the workspace:", paste(remaining_objects, collapse = ", "), "\n")
+
+# save(dat, file="output/dat.RData", compress = FALSE)
+# save(scores_num, file="output/scores_num.RData", compress = FALSE)
+# save(scores_num_long, file="output/scores_num_long.RData", compress = FALSE)
+# save(scores_tidy_long, file="output/scores_tidy_long.RData", compress = FALSE)
+
