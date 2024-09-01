@@ -43,3 +43,5 @@ Data/tech_assessors.xlsx
 
 # presentations
 *.pptx
+/00_preliminary_steps
+README_complete.md
