@@ -1,20 +1,8 @@
 # technologies
 Analysis for horizon scan of novel technologies for IAS citizen science
 
-## survey.R
-This code performs a random assignment of 10 technologies per assessor and
-taking into account that each technology is evaluated by exactly 10
-assessors
-Results are saved into 'assignments.csv'
-Please note this data is not anonymized
-
-## PII_data_management
-This folder contains scripts and data used for the anonymization process.
-Please note this data is not anonymized, only the anonymized output "scores_anonymised.csv" and "scores_anonymised.xlsx" will be shared in the data folder as a starting point for the subsequent analyses.
-The coders translation table provides the link between the ID of the assessors (coder field) and the names (E-mailadres field).
-
 ## Scripts
-This folder contains the main scripts for the analyses.   
+This folder contains the main scripts for the analyses (note that the preliminary steps to anonymise data are .gitignored!)
 
 ### Data cleaning
 00_datacleaning.R : reads the anonymised data and performs some data cleaning and tidying - the results are stored in R objects used by subsequent scripts, and saved in the output folder:
@@ -67,3 +55,7 @@ It calculates the following metrics:
 5. **Save the irr_table**: Finally, the code saves the irr_table as a CSV file in the output directory. The file name depends on the value of the Round variable.
 
 The code provides a comprehensive analysis of agreement between experts for different technologies, allowing to assess the reliability of the assessments and identify any significant differences between coders.
+
+
+#### NMDS
+**not revised yet*

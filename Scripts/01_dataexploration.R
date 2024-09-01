@@ -17,6 +17,13 @@ Mode <- function(x) {
   ux[which.max(tabulate(match(x, ux)))]
 }
 
+## ---- Load data ----
+load("output/dat.RData")
+load("output/scores_num.RData")
+load("output/scores_num_long.RData")
+load("output/scores_tidy_long.RData")
+
+
 ## ---- Assessors (Coders) per Technology ----
 # Group data by technology and count the number of coders for each technology
 summary_coders_tech <- dat %>% 
