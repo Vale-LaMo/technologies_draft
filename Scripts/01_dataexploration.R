@@ -23,12 +23,70 @@ load("output/scores_num.RData")
 load("output/scores_num_long.RData")
 load("output/scores_tidy_long.RData")
 
+## ---- Assessors (Coders) per Round (Before/After) ----
+length(unique(dat$coder)) # total no. of coders
+coders_round <- dat %>%
+  group_by(round,coder) %>%
+  summarise(n_assessments = n())
+table(coders_round$coder, coders_round$round) # coders per round
+colSums(table(coders_round$coder, coders_round$round)) # no. of coders in the different rounds
+sum(coders_round$n_assessments) # tot. no. of assessments
+
+# Identify coders who participated in both rounds
+coders_in_both <- scores_tidy_long %>%
+  group_by(coder) %>%
+  filter(n_distinct(round) == 2) %>%
+  ungroup()
+dim(coders_in_both)
+(num_coders_in_both_rounds <- n_distinct(coders_in_both$coder))
+
+# Check if they rated different technologies in each round
+coder_technology_diff <- coders_in_both %>%
+  group_by(coder) %>%
+  summarize(different_technologies = n_distinct(technology[round == 1] != technology[round == 2])) %>%
+  filter(different_technologies > 0)
+(num_coders_with_diff_tech <- nrow(coder_technology_diff))
+
+# For each coder, find overlapping technologies between the two rounds
+coder_technology_overlap <- coders_in_both %>%
+  group_by(coder) %>%
+  summarize(
+    overlap_technologies = list(intersect(
+      technology[round == 1], 
+      technology[round == 2]
+    )),
+    .groups = "drop"
+  )
+coder_technology_overlap %>%
+  mutate(
+    has_overlap = lengths(overlap_technologies) > 0  # TRUE if there is at least one overlapping technology
+  )
+
+## ---- Assessments per Round (Before/After) ----
+dim(dat)[1] # total no. of assessments
+assessments_round <- dat %>%
+  group_by(round) %>%
+  summarise(n_assessments = n())
+assessments_round # no. of assessments per round
+
+coders_round %>%
+  group_by(round) %>% 
+  summarise(mean = mean(n_assessments), sd = sd(n_assessments))
+
+assessments_coders <- dat %>%
+  group_by(coder) %>%
+  summarise(n_assessments = n())
+summary(assessments_coders$n_assessments)
+sd(assessments_coders$n_assessments)  
 
 ## ---- Assessors (Coders) per Technology ----
 # Group data by technology and count the number of coders for each technology
 summary_coders_tech <- dat %>% 
   group_by(technology) %>% 
   summarise(n = n())  # Count the number of entries (coders) per technology
+sum(summary_coders_tech$n) # ok, it gives again the no. of assessments
+summary(summary_coders_tech$n)
+sd(summary_coders_tech$n)
 
 # Create a bar plot to visualize the number of coders per technology
 summary_coders_tech %>% 
@@ -67,13 +125,31 @@ results <- dat %>%
     })
   )
 
+length(unique(dat$technology)) # total no. of technologies
 # Access the results for each round
 # for the first round:
 results$summary_coders_tech[[1]]
+dim(results$summary_coders_tech[[1]]) # no. of technologies assessed during the first round
 results$summary_coders_tech[[2]]
+dim(results$summary_coders_tech[[2]]) # no. of technologies assessed during the second round
 # plot for the first round:
 print(results$plot_coders[[1]])
 print(results$plot_coders[[2]])
+
+sum(results$summary_coders_tech[[1]]$n) # ok, it's the number of assessments during the first round
+summary(results$summary_coders_tech[[1]]$n)
+sd(results$summary_coders_tech[[1]]$n)
+
+sum(results$summary_coders_tech[[2]]$n) # ok, it's the number of assessments during the second round
+summary(results$summary_coders_tech[[2]]$n)
+sd(results$summary_coders_tech[[2]]$n)
+
+
+## ---- Technologies per Round (Before/After) ----
+techs_round <- dat %>%
+  group_by(round,technology) %>%
+  summarise(n_assessments = n())
+table(techs_round$technology, techs_round$round) # techs per round
 
 
 ## ---- Count 'I Don't Know' / 'N/A' Responses per Technology ----
@@ -160,7 +236,89 @@ results$unknown_ranks[[2]]
 print(results$plot_unknown[[1]])
 print(results$plot_unknown[[2]])
 
+## ---- Count only 'I Don't Know' Responses per Technology ----
+# Count occurrences of "I don't know" and "N/A" for each technology and criterion
+unknown_criteria <- scores_tidy_long %>% 
+  group_by(technology, criterion) %>% 
+  count(rank) %>% 
+  filter(rank == "I don't know")  # Filter for specific ranks
 
+# Summarize total counts of "I don't know" per technology
+unknown <- scores_tidy_long %>% 
+  group_by(technology) %>% 
+  count(rank) %>% 
+  filter(rank == "I don't know") %>%
+  summarise(tot = sum(n))  # Total counts
+
+# Create a bar plot to visualize the total counts of "I don't know" per technology
+unknown %>% 
+  ggplot(aes(reorder(technology, tot), tot)) + 
+  geom_col(aes(fill = tot)) +  # Bar chart with fill based on total
+  scale_fill_gradient2(low = "blue", high = "red") +  # Color gradient
+  coord_flip() +  # Flip coordinates for readability
+  theme_minimal() +  # Minimal theme
+  scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12)) +  # Set y-axis breaks
+  labs(x = "Technology", y = "No. of 'I Don't Know'")  # Label axes
+
+# Count detailed occurrences of "I don't know" by technology and rank
+unknown_ranks <- scores_tidy_long %>% 
+  filter(rank == "I don't know") %>%
+  group_by(technology, rank) %>% 
+  count(rank) %>% 
+  summarise(tot = sum(n))  # Total counts by rank
+
+# Create a stacked bar plot for detailed counts of "I don't know"
+unknown_ranks %>% 
+  ggplot(aes(reorder(technology, tot), tot, fill = rank)) + 
+  geom_bar(position = "stack", stat = "identity") +  # Stacked bar chart
+  scale_fill_manual(values = c("#0073C2FF", "#EFC000FF")) +  # Custom colors
+  coord_flip() +  # Flip coordinates for readability
+  theme_minimal() +  # Minimal theme
+  scale_y_continuous(breaks = c(2, 6, 10, 14, 18, 22)) +  # Set y-axis breaks
+  labs(x = "Technology", y = "No. of 'I Don't Know'") +  # Label axes
+  theme(legend.title = element_blank())  # Remove legend title
+# Uncomment to save the plot
+# ggsave("figs/summary_unknowns_detailed.tiff", dpi = 300, compression = 'lzw')
+
+
+## Analyses repeated for each round
+# Group and nest the data by the 'round' column
+results <- scores_tidy_long %>%
+  group_by(round) %>%
+  nest() %>%  # Nest the data for each round
+  mutate(
+    
+    # Count occurrences of "I don't know" and "N/A" for each technology and criterion
+    unknown_ranks = map(data, ~ {
+      .x %>%
+        filter(rank == "I don't know" | rank == "N/A") %>%
+        group_by(technology, rank) %>% 
+        count(rank) %>% 
+        summarise(tot = sum(n))
+    }),
+    
+    # # Create a bar plot for coders per technology
+    plot_unknown = map(unknown_ranks, ~ {
+      ggplot(.x, aes(reorder(technology, tot), tot, fill = rank)) + 
+        geom_bar(position = "stack", stat = "identity") +  # Stacked bar chart
+        scale_fill_manual(values = c("#0073C2FF", "#EFC000FF")) +  # Custom colors
+        coord_flip() +  # Flip coordinates for readability
+        theme_minimal() +  # Minimal theme
+        scale_y_continuous(breaks = c(2, 6, 10, 14, 18, 22)) +  # Set y-axis breaks
+        labs(x = "Technology", y = "No. of 'I Don't Know' / 'N/A'") +  # Label axes
+        theme(legend.title = element_blank())  # Remove legend title
+      
+    })
+    
+  )
+
+# Access the results for each round
+# for the first round:
+results$unknown_ranks[[1]]
+results$unknown_ranks[[2]]
+# plot for the first round:
+print(results$plot_unknown[[1]])
+print(results$plot_unknown[[2]])
 
 ## ---- Basic Statistics ----
 # Calculate basic statistics for each criterion, regardless of technology
@@ -295,6 +453,11 @@ print(results$violin_plot[[1]])
 i=1
 while(i <= length(unique(scores_num_long$technology))) {
   print(results$violin_plot[[i]])
+  tiff(paste("figs/violin_plots/violin_plot_",results$violin_plot[[i]]$labels$title,".tiff",sep=""),
+       height = 14, width = 20, units = "cm", res = 300, compression = "lzw",
+       pointsize = 8)
+  print(results$violin_plot[[i]])
+  dev.off()
   i = i+1
 }
 

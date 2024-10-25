@@ -2,7 +2,7 @@
 Analysis for horizon scan of novel technologies for IAS citizen science
 
 ## Scripts
-This folder contains the main scripts for the analyses (note that the preliminary steps to anonymise data are .gitignored!)
+This folder contains the main scripts for the analyses (note that the preliminary steps to anonymise data are .gitignored)
 
 ### Data cleaning
 00_datacleaning.R : reads the anonymised data and performs some data cleaning and tidying - the results are stored in R objects used by subsequent scripts, and saved in the output folder:
