@@ -62,23 +62,6 @@ coder_technology_overlap %>%
     has_overlap = lengths(overlap_technologies) > 0  # TRUE if there is at least one overlapping technology
   )
 
-## ---- Assessments per Round (Before/After) ----
-dim(dat)[1] # total no. of assessments
-assessments_round <- dat %>%
-  group_by(round) %>%
-  summarise(n_assessments = n())
-assessments_round # no. of assessments per round
-
-coders_round %>%
-  group_by(round) %>% 
-  summarise(mean = mean(n_assessments), sd = sd(n_assessments))
-
-assessments_coders <- dat %>%
-  group_by(coder) %>%
-  summarise(n_assessments = n())
-summary(assessments_coders$n_assessments)
-sd(assessments_coders$n_assessments)  
-
 ## ---- Assessors (Coders) per Technology ----
 # Group data by technology and count the number of coders for each technology
 summary_coders_tech <- dat %>% 
@@ -144,13 +127,30 @@ sum(results$summary_coders_tech[[2]]$n) # ok, it's the number of assessments dur
 summary(results$summary_coders_tech[[2]]$n)
 sd(results$summary_coders_tech[[2]]$n)
 
+## ---- Assessments per Round (Before/After) ----
+dim(dat)[1] # total no. of assessments
+assessments_round <- dat %>%
+  group_by(round) %>%
+  summarise(n_assessments = n())
+assessments_round # no. of assessments per round
+
+coders_round %>%
+  group_by(round) %>% 
+  summarise(mean = mean(n_assessments), sd = sd(n_assessments))
+
+assessments_coders <- dat %>%
+  group_by(coder) %>%
+  summarise(n_assessments = n())
+summary(assessments_coders$n_assessments)
+sd(assessments_coders$n_assessments) 
+
 
 ## ---- Technologies per Round (Before/After) ----
 techs_round <- dat %>%
   group_by(round,technology) %>%
   summarise(n_assessments = n())
 table(techs_round$technology, techs_round$round) # techs per round
-
+length(unique(dat$technology))
 
 ## ---- Count 'I Don't Know' / 'N/A' Responses per Technology ----
 # Count occurrences of "I don't know" and "N/A" for each technology and criterion
@@ -176,26 +176,46 @@ unknown %>%
   scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12)) +  # Set y-axis breaks
   labs(x = "Technology", y = "No. of 'I Don't Know' / 'N/A'")  # Label axes
 
-# Count detailed occurrences of "I don't know" and "N/A" by technology and rank
-unknown_ranks <- scores_tidy_long %>% 
-  filter(rank == "I don't know" | rank == "N/A") %>%
-  group_by(technology, rank) %>% 
-  count(rank) %>% 
-  summarise(tot = sum(n))  # Total counts by rank
+# # Count detailed occurrences of "I don't know" and "N/A" by technology and rank
+# unknown_ranks <- scores_tidy_long %>% 
+#   filter(rank == "I don't know" | rank == "N/A") %>%
+#   group_by(technology, rank) %>% 
+#   count(rank) %>% 
+#   summarise(tot = sum(n))  # Total counts by rank
+# 
+# # Create a stacked bar plot for detailed counts of "I don't know" / "N/A"
+# unknown_ranks %>% 
+#   ggplot(aes(reorder(technology, tot), tot, fill = rank)) + 
+#   geom_bar(position = "stack", stat = "identity") +  # Stacked bar chart
+#   scale_fill_manual(values = c("#0073C2FF", "#EFC000FF")) +  # Custom colors
+#   coord_flip() +  # Flip coordinates for readability
+#   theme_minimal() +  # Minimal theme
+#   scale_y_continuous(breaks = c(2, 6, 10, 14, 18, 22)) +  # Set y-axis breaks
+#   labs(x = "Technology", y = "No. of 'I Don't Know' / 'N/A'") +  # Label axes
+#   theme(legend.title = element_blank())  # Remove legend title
+# # Uncomment to save the plot
+# # ggsave("figs/summary_unknowns_detailed.tiff", dpi = 300, compression = 'lzw')
 
-# Create a stacked bar plot for detailed counts of "I don't know" / "N/A"
+# Count occurrences of "I don't know" and "N/A" by technology and rank, adding total count per technology
+unknown_ranks <- scores_tidy_long %>% 
+  filter(rank %in% c("I don't know", "N/A")) %>%
+  count(technology, rank) %>%
+  group_by(technology) %>%
+  mutate(total_count = sum(n)) %>%  # Calculate total for ordering
+  ungroup()
+
+# Create a stacked bar plot with technologies ordered by total count
 unknown_ranks %>% 
-  ggplot(aes(reorder(technology, tot), tot, fill = rank)) + 
+  ggplot(aes(reorder(technology, total_count), n, fill = rank)) + 
   geom_bar(position = "stack", stat = "identity") +  # Stacked bar chart
   scale_fill_manual(values = c("#0073C2FF", "#EFC000FF")) +  # Custom colors
   coord_flip() +  # Flip coordinates for readability
   theme_minimal() +  # Minimal theme
-  scale_y_continuous(breaks = c(2, 6, 10, 14, 18, 22)) +  # Set y-axis breaks
+  scale_y_continuous(breaks = seq(0, max(unknown_ranks$total_count), by = 2)) +  # Dynamic y-axis breaks
   labs(x = "Technology", y = "No. of 'I Don't Know' / 'N/A'") +  # Label axes
-  theme(legend.title = element_blank())  # Remove legend title
+  theme(legend.title = element_blank(), legend.position = "bottom")  # Remove legend title
 # Uncomment to save the plot
 # ggsave("figs/summary_unknowns_detailed.tiff", dpi = 300, compression = 'lzw')
-
 
 ## Analyses repeated for each round
 # Group and nest the data by the 'round' column
@@ -237,7 +257,7 @@ print(results$plot_unknown[[1]])
 print(results$plot_unknown[[2]])
 
 ## ---- Count only 'I Don't Know' Responses per Technology ----
-# Count occurrences of "I don't know" and "N/A" for each technology and criterion
+# Count occurrences of "I don't know" for each technology and criterion
 unknown_criteria <- scores_tidy_long %>% 
   group_by(technology, criterion) %>% 
   count(rank) %>% 
@@ -253,72 +273,91 @@ unknown <- scores_tidy_long %>%
 # Create a bar plot to visualize the total counts of "I don't know" per technology
 unknown %>% 
   ggplot(aes(reorder(technology, tot), tot)) + 
-  geom_col(aes(fill = tot)) +  # Bar chart with fill based on total
-  scale_fill_gradient2(low = "blue", high = "red") +  # Color gradient
+  geom_col(fill = "#0073C2FF") +
+  # geom_col(aes(fill = tot)) +  # Bar chart with fill based on total
+  # scale_fill_manual(values = c("#0073C2FF"))
+  # scale_fill_gradient2(low = "#0073C2FF", high = "blue") +  # Color gradient
   coord_flip() +  # Flip coordinates for readability
   theme_minimal() +  # Minimal theme
   scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12)) +  # Set y-axis breaks
   labs(x = "Technology", y = "No. of 'I Don't Know'")  # Label axes
-
-# Count detailed occurrences of "I don't know" by technology and rank
-unknown_ranks <- scores_tidy_long %>% 
-  filter(rank == "I don't know") %>%
-  group_by(technology, rank) %>% 
-  count(rank) %>% 
-  summarise(tot = sum(n))  # Total counts by rank
-
-# Create a stacked bar plot for detailed counts of "I don't know"
-unknown_ranks %>% 
-  ggplot(aes(reorder(technology, tot), tot, fill = rank)) + 
-  geom_bar(position = "stack", stat = "identity") +  # Stacked bar chart
-  scale_fill_manual(values = c("#0073C2FF", "#EFC000FF")) +  # Custom colors
-  coord_flip() +  # Flip coordinates for readability
-  theme_minimal() +  # Minimal theme
-  scale_y_continuous(breaks = c(2, 6, 10, 14, 18, 22)) +  # Set y-axis breaks
-  labs(x = "Technology", y = "No. of 'I Don't Know'") +  # Label axes
-  theme(legend.title = element_blank())  # Remove legend title
 # Uncomment to save the plot
-# ggsave("figs/summary_unknowns_detailed.tiff", dpi = 300, compression = 'lzw')
+# ggsave("figs/summary_IDontKnow.tiff", dpi = 300, compression = 'lzw')
 
+# Count occurrences of "I don't know" responses and ensure all technology-criterion combinations are present
+unknown_counts_complete <- scores_tidy_long %>%
+  mutate(n = if_else(rank == "I don't know", 1, 0)) %>%  # Create a count of 1 for "I don't know", 0 otherwise
+  group_by(technology, criterion) %>%
+  summarise(total_idk = sum(n), .groups = "drop") %>%  # Sum counts of "I don't know" per tech-criterion
+  complete(technology, criterion, fill = list(total_idk = 0))  # Fill missing pairs with 0
 
-## Analyses repeated for each round
-# Group and nest the data by the 'round' column
-results <- scores_tidy_long %>%
-  group_by(round) %>%
-  nest() %>%  # Nest the data for each round
-  mutate(
-    
-    # Count occurrences of "I don't know" and "N/A" for each technology and criterion
-    unknown_ranks = map(data, ~ {
-      .x %>%
-        filter(rank == "I don't know" | rank == "N/A") %>%
-        group_by(technology, rank) %>% 
-        count(rank) %>% 
-        summarise(tot = sum(n))
-    }),
-    
-    # # Create a bar plot for coders per technology
-    plot_unknown = map(unknown_ranks, ~ {
-      ggplot(.x, aes(reorder(technology, tot), tot, fill = rank)) + 
-        geom_bar(position = "stack", stat = "identity") +  # Stacked bar chart
-        scale_fill_manual(values = c("#0073C2FF", "#EFC000FF")) +  # Custom colors
-        coord_flip() +  # Flip coordinates for readability
-        theme_minimal() +  # Minimal theme
-        scale_y_continuous(breaks = c(2, 6, 10, 14, 18, 22)) +  # Set y-axis breaks
-        labs(x = "Technology", y = "No. of 'I Don't Know' / 'N/A'") +  # Label axes
-        theme(legend.title = element_blank())  # Remove legend title
-      
-    })
-    
+# # Create a heatmap with circles to represent counts of "I don't know"
+# unknown_counts_complete %>%
+#   ggplot(aes(x = criterion, y = reorder(technology, -total_idk), fill = total_idk, size = total_idk)) +
+#   geom_point(shape = 21, color = "white") +  # Circles with white borders
+#   scale_fill_gradient(low = "#E0F7FA", high = "#0073C2FF") +  # Remove fill legend
+#   scale_size(range = c(2, 10), guide = "none") +  # Adjust size range for better visibility
+#   theme_minimal() +
+#   labs(x = "Criterion", y = "Technology", size = "No. of 'I Don't Know'") +  # Label only size legend
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis text for readability
+#   )
+
+unknown_counts_complete %>%
+  ggplot(aes(x = criterion, y = reorder(technology, -total_idk), fill = total_idk)) +
+  geom_tile(color = "white") +  # White borders for tiles
+  scale_fill_gradient(low = "#E0F7FA", high = "#0073C2FF") +  # Gradient from light to dark
+  theme_minimal() +
+  labs(x = "Criterion", y = "Technology", fill = "No. of 'I Don't Know'") +  # Single legend for fill
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis text for readability
   )
 
-# Access the results for each round
-# for the first round:
-results$unknown_ranks[[1]]
-results$unknown_ranks[[2]]
-# plot for the first round:
-print(results$plot_unknown[[1]])
-print(results$plot_unknown[[2]])
+## ---- Count only 'N/A' Responses per Technology ----
+# Count occurrences of "N/A" for each technology and criterion
+NA_criteria <- scores_tidy_long %>% 
+  group_by(technology, criterion) %>% 
+  count(rank) %>% 
+  filter(rank == "N/A")  # Filter for specific ranks
+
+# Summarize total counts of "N/A" per technology
+NAS <- scores_tidy_long %>% 
+  group_by(technology) %>% 
+  count(rank) %>% 
+  filter(rank == "N/A") %>%
+  summarise(tot = sum(n))  # Total counts
+
+# Create a bar plot to visualize the total counts of "N/A" per technology
+NAS %>% 
+  ggplot(aes(reorder(technology, tot), tot)) + 
+  geom_col(fill = "#EFC000FF") +
+  # geom_col(aes(fill = tot)) +  # Bar chart with fill based on total
+  # scale_fill_manual(values = c("#0073C2FF"))
+  # scale_fill_gradient2(low = "#0073C2FF", high = "blue") +  # Color gradient
+  coord_flip() +  # Flip coordinates for readability
+  theme_minimal() +  # Minimal theme
+  scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12)) +  # Set y-axis breaks
+  labs(x = "Technology", y = "No. of 'N/A'")  # Label axes
+# Uncomment to save the plot
+# ggsave("figs/summary_NA.tiff", dpi = 300, compression = 'lzw')
+
+# Count occurrences of "N/A" responses and ensure all technology-criterion combinations are present
+NA_counts_complete <- scores_tidy_long %>%
+  mutate(n = if_else(rank == "N/A", 1, 0)) %>%  # Create a count of 1 for "I don't know", 0 otherwise
+  group_by(technology, criterion) %>%
+  summarise(total_idk = sum(n), .groups = "drop") %>%  # Sum counts of "I don't know" per tech-criterion
+  complete(technology, criterion, fill = list(total_idk = 0))  # Fill missing pairs with 0
+
+NA_counts_complete %>%
+  ggplot(aes(x = criterion, y = technology, fill = total_idk)) +
+  # ggplot(aes(x = criterion, y = reorder(technology, -total_idk), fill = total_idk)) +
+  geom_tile(color = "white") +  # White borders for tiles
+  scale_fill_gradient(low = "white", high = "#0073C2FF") +  # Gradient from light to dark
+  theme_minimal() +
+  labs(x = "Criterion", y = "Technology", fill = "No. of 'N/A'") +  # Single legend for fill
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis text for readability
+  )
 
 ## ---- Basic Statistics ----
 # Calculate basic statistics for each criterion, regardless of technology
@@ -453,11 +492,11 @@ print(results$violin_plot[[1]])
 i=1
 while(i <= length(unique(scores_num_long$technology))) {
   print(results$violin_plot[[i]])
-  tiff(paste("figs/violin_plots/violin_plot_",results$violin_plot[[i]]$labels$title,".tiff",sep=""),
-       height = 14, width = 20, units = "cm", res = 300, compression = "lzw",
-       pointsize = 8)
-  print(results$violin_plot[[i]])
-  dev.off()
+  # tiff(paste("figs/violin_plots/violin_plot_",results$violin_plot[[i]]$labels$title,".tiff",sep=""),
+  #      height = 14, width = 20, units = "cm", res = 300, compression = "lzw",
+  #      pointsize = 8)
+  # print(results$violin_plot[[i]])
+  # dev.off()
   i = i+1
 }
 

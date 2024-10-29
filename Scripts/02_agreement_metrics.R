@@ -74,7 +74,7 @@ while (i <= dim(techs)[1]) {
   }
   
   if (dim(matrix)[1] != 0 & dim(scores_matrix)[2] > 2) {
-    icc(as.data.frame(scores_matrix), type="consistency", model="twoway", unit = "average") -> icc_tech
+    icc(as.data.frame(scores_matrix), type="consistency", model="oneway", unit = "average") -> icc_tech
     icc_value[i] <- icc_tech$value
     icc_lbound[i] <- icc_tech$lbound
     icc_ubound[i] <- icc_tech$ubound
@@ -130,8 +130,12 @@ data.frame(
 left_join(irr_table_temp, summary_coders_tech) %>% 
   rename(no.coders = n) -> irr_table
 # write.csv(irr_table, "round1/output/irr_table_new.csv")
-if(Round == "All") write.csv(irr_table, "output/irr_table_pooled_20240826.csv")
-if(Round == "Before") write.csv(irr_table, "output/irr_table_Before_20240826.csv")
-if(Round == "After") write.csv(irr_table, "output/irr_table_After_20240826.csv")
+# if(Round == "All") write.csv(irr_table, "output/irr_table_pooled_20240826.csv")
+# if(Round == "Before") write.csv(irr_table, "output/irr_table_Before_20240826.csv")
+# if(Round == "After") write.csv(irr_table, "output/irr_table_After_20240826.csv")
+if(Round == "All") write.csv(irr_table, "output/irr_table_pooled_20241025.csv")
+if(Round == "Before") write.csv(irr_table, "output/irr_table_Before_20241025.csv")
+if(Round == "After") write.csv(irr_table, "output/irr_table_After_20241025.csv")
+
 
 ## Fleiss: a significant p-value means the stat is significantly different from 0 (agreement)
