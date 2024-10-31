@@ -38,7 +38,7 @@ Assessments were collected before the workshop discussion (individual assessment
 
 ### Agreement metrics
 
-02_agreement_metrics: calculates various metrics of agreement between experts for different technologies. Here's a breakdown of what the code does:
+02_agreement_metrics.R: calculates various metrics of agreement between experts for different technologies. Here's a breakdown of what the code does:
 
 1. **Load required packages**: The code loads the irr package for inter-rater reliability calculations and the lme4 package for linear mixed-effects models.
 
@@ -70,7 +70,7 @@ The tables are combined into a single data frame, irr_table_combined, with an ad
 
 ### Graphical representation of the agreement metrics results
 
-04_agreement_metrics_plot: This script focuses on visualizing agreement metrics across different rounds of assessment.
+04_agreement_metrics_plot.R: This script focuses on visualizing agreement metrics across different rounds of assessment.
 
 1. **Setup and Library Loading**: The script begins by loading essential packages for plotting and color schemes, such as `ggplot2` for data visualization and `viridis` for color scaling, along with `hrbrthemes` for theme customization.
 
@@ -88,7 +88,7 @@ The tables are combined into a single data frame, irr_table_combined, with an ad
 
 ### Ranking of technologies and confidence in the assessments
 
-05_ranking: This R script performs data processing, visualization, and analysis for ranking technologies based on specific criteria. 
+05_ranking.R: This R script performs data processing, visualization, and analysis for ranking technologies based on specific criteria. 
 
 1. **Loading Data and Libraries**:
    - Essential libraries (`tidyverse`, `ggpubr`, `hrbrthemes`, `viridis`, and `writexl`) are loaded to manage data and create plots.
@@ -118,5 +118,80 @@ The tables are combined into a single data frame, irr_table_combined, with an ad
    - Each plot can be saved as `.tiff` files if uncommented. The script produces an insightful visualization suite for understanding technology rankings, coder confidence, and areas of uncertainty. 
 
 
-#### NMDS
-**not revised yet*
+#### Clustering on weighted scores
+
+06_clustering.R: This script provides a comprehensive approach to clustering based on technology ratings, using both hierarchical and k-means clustering methods, and testing Euclidean and Manhattan distance metrics. Here’s an overview:
+
+### 1. **Load Packages and Data**
+   - A series of libraries is loaded to support clustering (`cluster`, `factoextra`, `NbClust`), visualization (`ggplot2`, `viridis`, `patchwork`), and data manipulation (`tidyverse`, `reshape2`).
+   - The data file, `weighted_scores_criteria.csv`, is loaded, and columns excluding `no.coders` are selected for clustering (`data_clustering`).
+
+### 2. **Distance Matrix Calculation**
+   - **Euclidean and Manhattan Distances**: Two distance matrices are created, one for Euclidean and another for Manhattan, allowing comparisons to determine which metric best fits the data structure.
+   - **PCA & Boxplots**: A PCA plot and boxplot are generated to evaluate cluster structure and feature variability, which can guide the choice between distance metrics based on cluster shapes and feature correlations.
+
+### 3. **Clustering Approaches**
+   - **Divisive Clustering**: Using the `diana()` function, a divisive hierarchical clustering approach is implemented and visualized.
+   - **Agglomerative Clustering**: Agglomerative clustering with complete linkage (`ward.D2` method) is applied to the distance matrix, with a plot for visual inspection.
+
+### 4. **Optimal Cluster Number Determination**
+   - **Cluster Validity Indices**: Three indices (elbow, silhouette, and gap statistic) are calculated using the `NbClust` and `fviz_nbclust` functions to identify the optimal cluster number (`no_clusters`), with plots generated for each index.
+   - **Elbow Plot, Silhouette Plot, Gap Statistic Plot**: These help visualize clustering quality and support the hypothesis of 4-5 clusters, despite data structure challenges.
+
+### 5. **Final Clustering and Visualization**
+   - The final hierarchical clustering (`aggl.clust.c`) is performed with `hcut`, and clusters are visualized via dendrograms and scatter plots.
+   - **k-means Clustering** (optional): A k-means clustering algorithm is applied as an alternative, followed by PCA to visualize clusters along the two principal components with labeled data points.
+
+This code provides a flexible, comparative framework for clustering the technology data. By evaluating both Manhattan and Euclidean distances and various cluster validity measures, it helps identify an optimal approach to cluster structure that can be explored visually and quantitatively.
+
+
+#### Clustering and NMDS combined
+
+06_nmds_clustering.R: This code performs a Non-Metric Multidimensional Scaling (NMDS) analysis combined with clustering to explore relationships between various technologies and criteria, aiming to identify clusters and visualize relationships with specific criteria as vectors.
+
+1. **Data Setup and NMDS**:
+   - **Packages Loaded**: `tidyverse` (for data manipulation), `ggpubr` (for enhanced ggplot functions), and `vegan` (for NMDS and ordination tools).
+   - **Data**: The dataset, `weighted_scores_criteria`, is read from a CSV file, and one column (`no.coders`) is excluded to create `data_clustering`.
+   - **NMDS Calculation**: NMDS is run on the `data_clustering` data, with 2 dimensions (`k=2`) and a maximum of 100 tries to optimize the solution (`trymax=100`).
+
+2. **Environmental Fitting**:
+   - **envfit Function**: Environmental variables (criteria) are fitted to the NMDS solution, examining which criteria (columns in `data_clustering`) drive the distribution of the technologies.
+   - **Subset for Significant Criteria**: The function identifies criteria significant at a 0.1 level, and this subset is saved for use in plotting arrows (or vectors).
+
+3. **Initial Plotting of NMDS**:
+   - **Base Plot**: Creates an NMDS scatterplot of technology points using `ggplot2`.
+   - **Vector Overlay**: Adds significant criteria as arrows, with `ggrepel` used for labeling to avoid overlapping labels.
+
+4. **Hierarchical Clustering**:
+   - **Agglomerative Clustering**: Performs clustering on NMDS coordinates using Ward’s method and Manhattan/Euclidean distance. The `cutree` function divides the data into `n_clusters` clusters, with each technology assigned to a cluster.
+   - **Ellipse Plot**: Uses ellipses to encircle clusters on the NMDS plot and custom colors for cluster representation.
+
+5. **Tree Plot (Dendrogram)**:
+   - A dendrogram is generated using `fviz_dend` from the `factoextra` package, visualizing the hierarchical clustering with colored rectangles around clusters.
+
+6. **K-means Clustering**:
+   - **K-means Analysis**: Another clustering approach on the NMDS coordinates, using K-means clustering for the same `n_clusters` value.
+   - **Ellipse Plot with K-means**: Similar to hierarchical clustering, but using K-means-derived clusters, it plots ellipses around each K-means cluster and overlays criterion arrows.
+
+This analysis identifies how technologies group based on NMDS space and visually represents relationships between criteria and technology clusters, providing insights into patterns driven by the criteria.
+
+#### Guidance to interpret the results of NMDS and clustering
+
+In the NMDS plot, the goal is to visualize how the technologies cluster in terms of the scores they received across different assessment criteria. Here’s a breakdown of the interpretation:
+
+**Positioning in NMDS Space:** Each point represents a technology, positioned in a way that best reflects the distances between it and other technologies based on their scores. Technologies closer together are more similar in their ratings across criteria, while those further apart are less similar.
+
+**Clusters and Ellipses:** The ellipses group technologies based on similarity, indicating clusters where the technologies are more closely related in terms of scoring patterns. This clustering reveals general patterns or subgroups of technologies based on shared attributes in the ratings.
+
+**Arrows (Assessment Criteria):** Each arrow represents a criterion or assessment aspect in the NMDS space. The direction of an arrow shows which direction higher scores for that criterion pull the technologies in this reduced space. The arrow length suggests the relative importance or impact of the criterion in differentiating technologies—the longer the arrow, the more it contributes to the observed separation between technologies. For instance, if a group of technologies clusters along the axis of an arrow, they likely scored similarly for that criterion.
+
+In general, the arrows help clarify which criteria are most influential in shaping the arrangement of the technologies in this NMDS space, guiding you toward understanding why particular clusters form as they do.
+
+Indeed, points that are closer to an arrow (and, more specifically, in the direction the arrow points) tend to be more strongly associated with that criterion. This indicates that these technologies have higher values for that particular criterion compared to others. The closer a point is to an arrow, the more it aligns with the characteristic the arrow represents.
+Here’s a summary of how to interpret this spatial relationship:
+
+- Points in the Direction of the Arrow: Technologies that fall along the arrow's path are more influenced by or have higher values for that criterion.
+- Distance to the Arrow: The closer a point is to the arrow, the stronger its association with that criterion.
+- Opposite Direction: If a technology is on the opposite side or far from an arrow, it may score lower on that criterion, relative to others.
+
+This makes it easier to spot which criteria are driving the formation of clusters and how individual technologies relate to each criterion.
