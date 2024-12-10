@@ -11,6 +11,7 @@ library(ggpubr)
 library(hrbrthemes)
 library(viridis)
 library(writexl)
+library(extrafont)
 
 load("output/scores_num_long.RData")
 load("output/scores_tidy_long.RData")
@@ -50,7 +51,7 @@ viridis(1, option = "H", begin = 0.8, end = 0) -> bar_color
 weighted_scores_criteria_long %>% 
   ggplot(aes(reorder(technology, sum.scores), sum.scores)) + 
   geom_bar(stat="identity", fill = bar_color) + 
-  theme_ipsum_ps(axis_title_size = 10, axis = FALSE) +
+  theme_ipsum_ps(axis_title_size = 10, axis = FALSE, base_family = "IBM Plex Sans SC") +
   coord_flip() + 
   labs(x = "Technology", y = "Sum of scores") +
   theme(axis.text.y = element_blank(),
@@ -67,7 +68,7 @@ plot_ranking_base
 weighted_scores_criteria_long %>% 
   ggplot(aes(reorder(technology, sum.scores), w.scores, fill=criteria)) + 
   geom_bar(position="stack", stat="identity") + 
-  theme_ipsum_ps(axis_title_size = 10, axis = FALSE) +
+  theme_ipsum_ps(axis_title_size = 10, axis = FALSE, base_family = "IBM Plex Sans SC") +
   scale_fill_viridis(discrete = TRUE, option = "H", begin = 1, end = 0,
                      labels = c("Application", "Audience", "Engagement via feedback", "Engagement with others", "Extend data", "Improve data curation", "Improve data flow", "Improve data quality", "New data")) +
   coord_flip() + 
@@ -78,20 +79,21 @@ weighted_scores_criteria_long %>%
   guides(fill = guide_legend(nrow = 3)) -> plot_ranking
 plot_ranking
 
-weighted_scores_criteria_long %>%
-  ggplot(aes(reorder(technology, sum.scores), w.scores, fill = criteria)) + 
-  geom_bar(position = "dodge", stat = "identity") + # Change position to dodge for grouping
-  theme_ipsum_ps(axis_title_size = 10, axis = FALSE) +
-  scale_fill_viridis(discrete = TRUE, option = "H", begin = 1, end = 0,
-                     labels = c("Application", "Audience", "Engagement via feedback", "Engagement with others", 
-                                "Extend data", "Improve data curation", "Improve data flow", "Improve data quality", "New data")) +
-  coord_flip() + 
-  labs(x = "Technology", y = "Score") +
-  theme(legend.position = "bottom", # Position legend for grouped bars
-        plot.margin = margin(5.5, 40, 60, 5.5),
-        axis.title.x = element_text(vjust = 1, hjust = 0.5)) +
-  guides(fill = guide_legend(nrow = 3)) -> plot_grouped
-plot_grouped
+# not very good
+# weighted_scores_criteria_long %>%
+#   ggplot(aes(reorder(technology, sum.scores), w.scores, fill = criteria)) + 
+#   geom_bar(position = "dodge", stat = "identity") + # Change position to dodge for grouping
+#   theme_ipsum_ps(axis_title_size = 10, axis = FALSE, base_family = "IBM Plex Sans SC") +
+#   scale_fill_viridis(discrete = TRUE, option = "H", begin = 1, end = 0,
+#                      labels = c("Application", "Audience", "Engagement via feedback", "Engagement with others", 
+#                                 "Extend data", "Improve data curation", "Improve data flow", "Improve data quality", "New data")) +
+#   coord_flip() + 
+#   labs(x = "Technology", y = "Score") +
+#   theme(legend.position = "bottom", # Position legend for grouped bars
+#         plot.margin = margin(5.5, 40, 60, 5.5),
+#         axis.title.x = element_text(vjust = 1, hjust = 0.5)) +
+#   guides(fill = guide_legend(nrow = 3)) -> plot_grouped
+# plot_grouped
 
 weighted_scores_criteria_long %>%
   ggplot(aes(x = w.scores, y = reorder(technology, sum.scores), color = criteria)) + 
@@ -109,7 +111,7 @@ weighted_scores_criteria_long %>%
         legend.title = element_text(size = 10),
         legend.text = element_text(size = 8)) +
   guides(color = guide_legend(nrow = 3)) -> dot_chart
-dot_chart
+dot_chart # so cool :) but not so easy to read
 
 
 weighted_scores_criteria_long %>%
@@ -126,7 +128,7 @@ weighted_scores_criteria_long %>%
         legend.text = element_text(size = 8)) +
   guides(fill = guide_colorbar(barwidth = 10, barheight = 0.5)) -> heatmap_plot
 heatmap_plot
-
+# ggsave("figs/ranking_additional_plots/heatmap_plot.jpg")
 
 weighted_scores_criteria_long %>%
   ggplot(aes(x = w.scores, y = reorder(technology, sum.scores), fill = criteria)) + 
@@ -150,77 +152,66 @@ weighted_scores_criteria_long %>%
         legend.text = element_text(size = 8)) +
   guides(fill = guide_legend(nrow = 3)) -> faceted_bar_plot
 faceted_bar_plot
+# ggsave("figs/ranking_additional_plots/faceted_bar_plot.jpg")
 
-weighted_scores_criteria_long_gr <- weighted_scores_criteria_long %>%
-  mutate(group = case_when(
-    criteria == "application" ~ "Application",
-    criteria %in% c("audience", "engagement_feedback", "engagement_others") ~ "Engagement",
-    criteria %in% c("extend_data", "new_data") ~ "New info",
-    TRUE ~ "Improve data"
-  ))
-weighted_scores_criteria_long_gr$group <- factor(weighted_scores_criteria_long_gr$group,
-  levels = c("New info", "Improve data", "Engagement", "Application"))
-weighted_scores_criteria_long_gr %>%
-  ggplot(aes(x = w.scores, y = reorder(technology, sum.scores), fill = criteria)) + 
-  geom_bar(position="stack", stat = "identity", width = 0.8) + # Bars
-  scale_fill_viridis_d(option = "H", begin = 1, end = 0, 
-                       labels = c("Application", "Audience", "Engagement via feedback", 
-                                  "Engagement with others", "Extend data", 
-                                  "Improve data curation", "Improve data flow", 
-                                  "Improve data quality", "New data")) +
-  facet_grid(. ~ factor(group)) + # Facets for groups
-  theme_minimal(base_size = 10) +
-  labs(x = "Score", y = "Technology", fill = "Criteria") +
-  theme(axis.text.y = element_text(size = 8), # Technology names only once
-        axis.title.x = element_text(size = 10),
-        axis.text.x = element_blank(), # Simplify x-axis
-        axis.ticks.x = element_blank(),
-        panel.grid.major.x = element_blank(),
-        strip.text = element_text(size = 10), # Larger facet labels
-        legend.position = "bottom", # Legend below plot
-        legend.title = element_text(size = 10),
-        legend.text = element_text(size = 8)) +
-  guides(fill = guide_legend(nrow = 3)) -> grouped_facet_bar_plot
-grouped_facet_bar_plot
-
- 
+criteria <- sort(unique(weighted_scores_criteria_long$criteria))
+unique(bind_rows(ggplot_build(faceted_bar_plot)$data)$fill) -> criteria_col
+# viridis_pal(option = "H", begin = 1, end = 0)(length(criteria)) -> criteria_col
+for(i in 1:length(criteria)) {
+  weighted_scores_criteria_long %>%
+    filter(criteria == criteria[i]) %>% 
+    ggplot(aes(x = w.scores, y = reorder(technology, w.scores), fill = criteria)) + 
+    geom_bar(stat = "identity", width = 0.8) + # Bars instead of dots
+    scale_fill_manual(values = criteria_col[i]) +
+    # facet_grid(. ~ criteria, scales = "free_x", space = "free_x") + # Side-by-side facets
+    theme_minimal(base_size = 10) +
+    labs(x = "Weighted score", y = "Technology", fill = "Criteria", title = criteria[i]) +
+    xlim(0,6) +
+    theme(#axis.text.y = element_text(size = 8), # Show technology names only once
+      axis.title.x = element_text(size = 10),
+      #axis.text.x = element_blank(), # Remove x-axis text for a cleaner look
+      #axis.ticks.x = element_blank(),
+      #panel.grid.major.x = element_blank(),
+      strip.text = element_text(size = 8), # Smaller facet labels
+      legend.position = "none", # Move legend below the plot
+      legend.title = element_text(size = 10),
+      legend.text = element_text(size = 8)) +
+    guides(fill = guide_legend(nrow = 3))
+  # ggsave(paste("figs/ranking_additional_plots/ranking_",criteria[i],".jpg",sep = ""))
+}
 
 
-weighted_scores_criteria_long %>%
-  ggplot(aes(x = w.scores, y = reorder(technology, sum.scores), color = criteria)) + 
-  geom_point(size = 3, alpha = 0.8) + # Dot size and transparency
-  scale_color_viridis_d(option = "H", begin = 1, end = 0, 
-                        labels = c("Application", "Audience", "Engagement via feedback", 
-                                   "Engagement with others", "Extend data", 
-                                   "Improve data curation", "Improve data flow", 
-                                   "Improve data quality", "New data")) +
-  theme_minimal(base_size = 10) +
-  labs(x = "Score", y = "Technology", color = "Criteria") +
-  theme(axis.text.y = element_text(size = 8),
-        axis.title.x = element_text(size = 10),
-        legend.position = "bottom",
-        legend.title = element_text(size = 10),
-        legend.text = element_text(size = 8)) +
-  guides(color = guide_legend(nrow = 3)) -> dot_chart
-dot_chart
-
-
-weighted_scores_criteria_long %>%
-  ggplot(aes(x = criteria, y = reorder(technology, sum.scores), fill = w.scores)) + 
-  geom_tile(color = "white") + # Heatmap with tile borders
-  scale_fill_viridis(option = "H", begin = 0, end = 1, 
-                     name = "Score", na.value = "grey90") + # Viridis color scale for scores
-  theme_minimal(base_size = 10) +
-  labs(x = "Criteria", y = "Technology") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), # Rotate x-axis labels for readability
-        axis.text.y = element_text(size = 8),
-        legend.position = "bottom",
-        legend.title = element_text(size = 10),
-        legend.text = element_text(size = 8)) +
-  guides(fill = guide_colorbar(barwidth = 10, barheight = 0.5)) -> heatmap_plot
-heatmap_plot
-
-
+# weighted_scores_criteria_long_gr <- weighted_scores_criteria_long %>%
+#   mutate(group = case_when(
+#     criteria == "application" ~ "Application",
+#     criteria %in% c("audience", "engagement_feedback", "engagement_others") ~ "Engagement",
+#     criteria %in% c("extend_data", "new_data") ~ "New info",
+#     TRUE ~ "Improve data"
+#   ))
+# weighted_scores_criteria_long_gr$group <- factor(weighted_scores_criteria_long_gr$group,
+#   levels = c("New info", "Improve data", "Engagement", "Application"))
+# weighted_scores_criteria_long_gr %>%
+#   ggplot(aes(x = w.scores, y = reorder(technology, sum.scores), fill = criteria)) + 
+#   geom_bar(position="stack", stat = "identity", width = 0.8) + # Bars
+#   scale_fill_viridis_d(option = "H", begin = 1, end = 0, 
+#                        labels = c("Application", "Audience", "Engagement via feedback", 
+#                                   "Engagement with others", "Extend data", 
+#                                   "Improve data curation", "Improve data flow", 
+#                                   "Improve data quality", "New data")) +
+#   facet_grid(. ~ factor(group)) + # Facets for groups
+#   theme_minimal(base_size = 10) +
+#   labs(x = "Score", y = "Technology", fill = "Criteria") +
+#   theme(axis.text.y = element_text(size = 8), # Technology names only once
+#         axis.title.x = element_text(size = 10),
+#         axis.text.x = element_blank(), # Simplify x-axis
+#         axis.ticks.x = element_blank(),
+#         panel.grid.major.x = element_blank(),
+#         strip.text = element_text(size = 10), # Larger facet labels
+#         legend.position = "bottom", # Legend below plot
+#         legend.title = element_text(size = 10),
+#         legend.text = element_text(size = 8)) +
+#   guides(fill = guide_legend(nrow = 3)) -> grouped_facet_bar_plot
+# grouped_facet_bar_plot
 
 ##---- analyse confidence in the assessments for the final ranking ----
 
@@ -465,7 +456,20 @@ heathist_plot
 #   plot_layout(widths = c(4, -1.8, 0.7))
 # dev.off()
 
-
+criteria_names <- c("Application", "Audience", "Engagement via feedback",
+                    "Engagement with others", "Extend data",
+                    "Improve data curation", "Improve data flow",
+                    "Improve data quality", "New data")
+library(ggbeeswarm)
+ggplot(weighted_scores_criteria_long, aes(y = criteria, x = w.scores)) +
+  geom_boxplot(outlier.shape = NA) +  # Boxplots without outliers
+  geom_beeswarm(aes(color = technology), dodge.width = 0.75) +
+  theme_minimal(base_size = 10) +
+  scale_fill_viridis() +
+  theme(legend.position = "none") +
+  scale_y_discrete(labels = criteria_names) +
+  labs(x = "Weighted score", y = "Criteria")
+# ggsave("figs/ranking_additional_plots/criteria_contribution.jpg")
 
 ##---- Balloon plot ----
 # # Create the ggballoonplot with correct reordering and complete technology list
