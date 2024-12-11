@@ -461,14 +461,29 @@ criteria_names <- c("Application", "Audience", "Engagement via feedback",
                     "Improve data curation", "Improve data flow",
                     "Improve data quality", "New data")
 library(ggbeeswarm)
+library(ggrepel) 
+
+# Preprocess the data to identify the top 3 and bottom 3 for each criteria
+label_data <- weighted_scores_criteria_long %>%
+  group_by(criteria) %>%
+  arrange(desc(w.scores)) %>%
+  slice(c(1:3)) %>%  # Select top 3 
+  # slice(c(1:3, (n() - 2):n())) %>%  # Select top 3 and bottom 3
+  # slice(c(1:1, (n()):n())) %>%
+  ungroup()
+
 ggplot(weighted_scores_criteria_long, aes(y = criteria, x = w.scores)) +
+  # geom_boxplot() +
   geom_boxplot(outlier.shape = NA) +  # Boxplots without outliers
   geom_beeswarm(aes(color = technology), dodge.width = 0.75) +
+  # geom_beeswarm(size = 0.8, alpha = 0.5, col = criteria_col[2], dodge.width = 0.75) +
   theme_minimal(base_size = 10) +
   scale_fill_viridis() +
   theme(legend.position = "none") +
   scale_y_discrete(labels = criteria_names) +
   labs(x = "Weighted score", y = "Criteria")
+  # geom_text_repel(aes(label = technology), size = 3, max.overlaps = 25) +
+  # geom_text_repel(data = label_data, aes(label = technology), size = 3)
 # ggsave("figs/ranking_additional_plots/criteria_contribution.jpg")
 
 ##---- Balloon plot ----
