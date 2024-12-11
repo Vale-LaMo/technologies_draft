@@ -456,6 +456,9 @@ heathist_plot
 #   plot_layout(widths = c(4, -1.8, 0.7))
 # dev.off()
 
+
+##---- Criteria contribution ----
+
 criteria_names <- c("Application", "Audience", "Engagement via feedback",
                     "Engagement with others", "Extend data",
                     "Improve data curation", "Improve data flow",
@@ -472,6 +475,7 @@ label_data <- weighted_scores_criteria_long %>%
   # slice(c(1:1, (n()):n())) %>%
   ungroup()
 
+# baseline (simple) boxplot on criteria contribution
 ggplot(weighted_scores_criteria_long, aes(y = criteria, x = w.scores)) +
   # geom_boxplot() +
   geom_boxplot(outlier.shape = NA) +  # Boxplots without outliers
@@ -479,12 +483,29 @@ ggplot(weighted_scores_criteria_long, aes(y = criteria, x = w.scores)) +
   # geom_beeswarm(size = 0.8, alpha = 0.5, col = criteria_col[2], dodge.width = 0.75) +
   theme_minimal(base_size = 10) +
   scale_fill_viridis() +
-  theme(legend.position = "none") +
+  # theme(legend.position = "bottom") +
   scale_y_discrete(labels = criteria_names) +
   labs(x = "Weighted score", y = "Criteria")
   # geom_text_repel(aes(label = technology), size = 3, max.overlaps = 25) +
-  # geom_text_repel(data = label_data, aes(label = technology), size = 3)
+  # geom_text_repel(data = label_data, aes(label = technology), size = 2.5)
+# # Uncomment to save the plot
 # ggsave("figs/ranking_additional_plots/criteria_contribution.jpg")
+
+# detailed boxplot on criteria contribution
+ggplot(weighted_scores_criteria_long, aes(y = criteria, x = w.scores)) +
+  # geom_boxplot() +
+  geom_boxplot(outlier.shape = NA) +  # Boxplots without outliers
+  geom_beeswarm(aes(color = technology), dodge.width = 0.75) +
+  # geom_beeswarm(size = 0.8, alpha = 0.5, col = criteria_col[2], dodge.width = 0.75) +
+  theme_minimal(base_size = 10) +
+  scale_fill_viridis() +
+  theme(legend.position = "bottom") +
+  scale_y_discrete(labels = criteria_names) +
+  labs(x = "Weighted score", y = "Criteria") +
+  # geom_text_repel(aes(label = technology), size = 3, max.overlaps = 25) +
+  geom_text_repel(data = label_data, aes(label = technology), size = 2.5)
+# # Uncomment to save the plot
+# ggsave("figs/ranking_additional_plots/criteria_contribution_detailed.jpg")
 
 ##---- Balloon plot ----
 # # Create the ggballoonplot with correct reordering and complete technology list

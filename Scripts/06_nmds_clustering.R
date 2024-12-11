@@ -16,6 +16,7 @@
 library(tidyverse)
 library(ggpubr)
 library(vegan)
+library(factoextra)
 
 ## ---- data ----
 weighted_scores_criteria <- read.csv("output/weighted_scores_criteria.csv")
@@ -91,7 +92,7 @@ n_clusters <- 4 # Set desired number of clusters
 aggl.clust.c <- hcut(site.scrs[, c("NMDS1", "NMDS2")], k=n_clusters,
                      hc_func = "hclust",
                      hc_method = "ward.D2",
-                     hc_metric = "euclidean") # eventually change to Euclidean, but then check all file names!!
+                     hc_metric = "euclidean") # eventually change to manhattan, but then check all file names!!
 # cut the tree and join cluster info with data
 site.scrs$Cluster <- as.character(cutree(aggl.clust.c, k = n_clusters))
 
