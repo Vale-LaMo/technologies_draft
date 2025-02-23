@@ -45,4 +45,5 @@ Data/tech_assessors.xlsx
 *.pptx
 /00_preliminary_steps
 README_complete.md
-/figs/clustering_nmds
+/figs/clustering_nmds/*
+figs/ranking_additional_plots/criteria_contribution_clustercolours.tiff

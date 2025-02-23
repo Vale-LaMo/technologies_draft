@@ -17,16 +17,18 @@ library(ggrepel)
 
 load("output/scores_num_long.RData")
 load("output/scores_tidy_long.RData")
-source("Scripts/01_dataexploration.R")
+source("Scripts/01a_dataexploration.R")
 
 ## ---- scores tot and per criteria ----
 scores_num_long %>%
   group_by(technology) %>%
   summarise(sum.scores = sum(rank, na.rm = TRUE),
+            no.scores = sum(!is.na(rank)),
             no.coders = length(unique(coder))) -> scores_tech
 scores_num_long %>% 
   group_by(technology, criterion) %>% 
   summarise(sum.scores = sum(rank, na.rm = TRUE),
+            no.scores = sum(!is.na(rank)),
             no.coders = length(unique(coder))) -> scores_tech_criteria
 pivot_wider(scores_tech_criteria, names_from = criterion,
             values_from = sum.scores) -> scores_tech_criteria_wide
@@ -74,7 +76,7 @@ weighted_scores_criteria_long %>%
   scale_fill_viridis(discrete = TRUE, option = "H", begin = 1, end = 0,
                      labels = c("Application", "Audience", "Engagement via feedback", "Engagement with others", "Extend data", "Improve data curation", "Improve data flow", "Improve data quality", "New data")) +
   coord_flip() + 
-  labs(x = "Technology", y = "Score") +
+  labs(x = "", y = "Score") +
   theme(legend.position = c(0.4, -0.15),
         plot.margin = margin(5.5, 40, 60, 5.5),
         axis.title.x = element_text(vjust = 1, hjust = 0.5)) +
@@ -326,7 +328,7 @@ combined_plot_heatmap <- heatmap_plot + plot_spacer() +
 combined_plot_heatmap
 
 # # Uncomment to save the plot
-# tiff("figs/ranking_confidence_plot.tiff",
+# tiff("figs/ranking_confidence_plot_new.tiff",
 #      height = 20, width = 20*1.365411, units = "cm", res = 300, compression = "lzw",
 #      pointsize = 6)
 # combined_plot
@@ -340,6 +342,8 @@ confidence_long %>%
             score = mean(sum.scores)) -> dati_corr
 cor(dati_corr$median, dati_corr$score, use = "complete.obs", method = "spearman")
 cor.test(dati_corr$median, dati_corr$score, use = "complete.obs", method = "spearman")
+hist(dati_corr$score) # looks normal
+shapiro.test(dati_corr$score) # looks normal
 (lm(score ~ median, data = dati_corr)) -> corr_model
 library(sjPlot)
 plot_model(corr_model, type = "pred", terms = "median")

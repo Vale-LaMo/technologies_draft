@@ -53,7 +53,8 @@ ggplot(irr_table_combined, aes(x = Round, y = icc, col = Round)) +
   geom_jitter(width = 0.2, alpha = 0.5) +  # Add individual points
   labs(x = "Assessment Round",
        y = "Intraclass Correlation Coefficient (ICC)") +
-  theme_ipsum_ps(axis_title_size = 10, axis = TRUE) +
+  # theme_ipsum_ps(axis_title_size = 10, axis = TRUE) +
+  theme_minimal(base_size = 10) +
   theme(legend.position = "none") +
   ylim(c(ymin, 1)) +
   scale_color_viridis(discrete = TRUE, option = "H", begin = 0, end = 0.8) +
@@ -114,7 +115,8 @@ ggplot(irr_table_combined, aes(x = Round, y = kripp, col = Round)) +
   geom_jitter(width = 0.2, alpha = 0.5) +  # Add individual points
   labs(x = "Assessment Round",
        y = "Krippendorff's Alpha") +
-  theme_ipsum_ps(axis_title_size = 10, axis = TRUE) +
+  # theme_ipsum_ps(axis_title_size = 10, axis = TRUE) +
+  theme_minimal(base_size = 10) +
   theme(legend.position = "none") +
   scale_y_continuous(limits = c(ymin, 1)) +  # Set y-axis limits explicitly
   
@@ -177,7 +179,8 @@ ggplot(irr_table_combined, aes(x = Round, y = fleiss, col = Round)) +
   geom_jitter(width = 0.2, alpha = 0.5) +  # Add individual points
   labs(x = "Assessment Round",
        y = "Fleiss' Kappa") +
-  theme_ipsum_ps(axis_title_size = 10, axis = TRUE) +
+  # theme_ipsum_ps(axis_title_size = 10, axis = TRUE) +
+  theme_minimal(base_size = 10) +
   theme(legend.position = "none") +
   # ylim(c(0,1)) +
   scale_y_continuous(limits = c(ymin, 1)) +  # Set y-axis limits explicitly
@@ -226,6 +229,25 @@ fleiss_plot
 #      pointsize = 8)
 # fleiss_plot
 # dev.off()
+
+
+# # Uncomment to save the plots. NEW PLOTS 20250217!
+# tiff("figs/icc_plot_20250217.tiff",
+#      height = 14, width = 20, units = "cm", res = 300, compression = "lzw",
+#      pointsize = 8)
+# icc_plot
+# dev.off()
+# tiff("figs/kripp_plot_20250217.tiff",
+#      height = 14, width = 20, units = "cm", res = 300, compression = "lzw",
+#      pointsize = 8)
+# kripp_plot
+# dev.off()
+# tiff("figs/fleiss_plot_20250217.tiff",
+#      height = 14, width = 20, units = "cm", res = 300, compression = "lzw",
+#      pointsize = 8)
+# fleiss_plot
+# dev.off()
+
 
 ##---- References -----
 # Cicchetti, D.V. (1994). Guidelines, criteria, and rules of thumb for evaluating normed and standardized

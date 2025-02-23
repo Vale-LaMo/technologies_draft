@@ -17,9 +17,11 @@ library(ggplot2)      # For data visualization
 library(robustlmm)    # For robust regression
 
 ### ---- Combine the data frames ---
-irr_table_before <- read.csv("output/irr_table_Before_20241025.csv")
-irr_table_after <- read.csv("output/irr_table_After_20241025.csv")
+# irr_table_before <- read.csv("output/irr_table_Before_20241025.csv")
+# irr_table_after <- read.csv("output/irr_table_After_20241025.csv")
 # irr_table_all <- read.csv("output/irr_table_pooled_20241025.csv")
+irr_table_before <- read.csv("output/irr_table_Before_20250217.csv")
+irr_table_after <- read.csv("output/irr_table_After_20250217.csv")
 
 irr_table_combined <- bind_rows(
   mutate(irr_table_before, Round = "Before"),
@@ -120,6 +122,18 @@ ggplot(emm_df[[i]], aes(x = Round, y = emmean, color = Round)) +
 # results showed in the paper
 
 robust_model <- rlmer(value ~ Round*name + (1 | technology), data = irr_table_long) # + (1 | name)
+# the interaction Round*name allows the effect of Round to differ across the three metrics
+
+# Since the primary focus of this analysis is to assess the consistency of ratings within each round (Before vs. After),
+# individual assessor variability was not explicitly modeled.
+# Instead, the fixed effect of Round was included to compare the ICC values between the two rounds,
+# while variability between technologies was accounted for by including technology as a random effect.
+# This approach simplifies the model by avoiding the inclusion of individual assessors,
+# which is justified by the absence of specific rater-related hypotheses in the current analysis.
+# Also, recall that we had to stick to ICC1 (oneway) rather than also testing assessors effect, because we do not have
+# a fully crossed design
+# See also end of 02_agreement_metrics.R for a check
+
 # Summarize the model results
 summary(robust_model)
 
@@ -141,6 +155,4 @@ ggplot(emm_df, aes(x = Round, y = emmean, color = Round)) +
        y = "Estimated Value") +
   theme_minimal() +                                # Use a minimal theme for a cleaner look
   theme(legend.position = "none")                  # Remove legend if not needed
-
-
 

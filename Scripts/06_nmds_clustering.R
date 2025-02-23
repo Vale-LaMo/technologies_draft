@@ -198,11 +198,12 @@ nmds.plot.overall <- ggplot(site.scrs, aes(x = NMDS1, y = NMDS2)) +
 print(nmds.plot.overall)
 # dev.off()
 
+
 # Step 4: Plot NMDS with ellipses and arrows
 scaling_factor <- 0.5
 criteria_scores$Criterion <- c("Application", "Audience", "Engagement via feedback", "Engagement with others",
                                "Extend data", "Improve curation", "Improve flow", "Improve quality", "New data")
-nmds.plot.overall <- ggplot(site.scrs, aes(x = NMDS1, y = NMDS2)) +
+nmds.plot.overall.vectors <- ggplot(site.scrs, aes(x = NMDS1, y = NMDS2)) +
   geom_point(aes(colour = Cluster, size = 2), show.legend = FALSE) +
   # geom_text_repel(aes(label = Technology), size = 3, box.padding = 0.5, max.overlaps = Inf) +
   stat_ellipse(aes(group = Cluster, colour = Cluster), type = "t", level = 0.95, linetype = "dashed") +
@@ -219,8 +220,90 @@ nmds.plot.overall <- ggplot(site.scrs, aes(x = NMDS1, y = NMDS2)) +
 
 # Plot the NMDS
 # tiff("figs/clustering_nmds/nmds_kmeans_vectors.tiff", res=1000, width = 22, height = 27, units = "cm")
-print(nmds.plot.overall)
+print(nmds.plot.overall.vectors)
 # dev.off()
 
 
+# step 3 and 4 combined - fig for paper
+text_size <- 5
+nmds.plot.overall <- ggplot(site.scrs, aes(x = NMDS1, y = NMDS2)) +
+  geom_point(aes(colour = Cluster, size = 2), show.legend = FALSE) +
+  geom_text_repel(aes(label = Technology), size = text_size, box.padding = 0.5, max.overlaps = Inf) +
+  stat_ellipse(aes(group = Cluster, colour = Cluster), type = "t", level = 0.95, linetype = "dashed") +
+  coord_fixed() +
+  # theme_ipsum_ps() +
+  theme_minimal(base_size = 10) +
+  theme(legend.position = "none") +
+  labs(colour = "Cluster") +
+  scale_fill_viridis(discrete = TRUE, option = "H", begin = 1, end = 0)
+  # xlim(min(site.scrs$NMDS1) - 0.5, max(site.scrs$NMDS1) + 0.2)
+# Plot the NMDS
+# check file name!
+# tiff("figs/clustering_nmds/nmds_kmeans_new.tiff", res=1000, width = 22, height = 27, units = "cm")
+print(nmds.plot.overall)
+# dev.off()
+# Adjust margin of the first plot to create space
+nmds.plot.overall <- nmds.plot.overall +
+  theme(plot.margin = margin(t = 20, r = 180, b = 20, l = 20))  # Add more space on the right
 
+
+viridis(n_clusters, option = "H", begin = 1, end = 0)
+custom_colors <- c("1" = "#7A0403FF",   
+                   "2" = "#FABA39FF",   
+                   "3" = "#1AE4B6FF",
+                   "4" = "#30123BFF") 
+scaling_factor <- 0.3
+criteria_scores$Criterion <- c("Application", "Audience", "Engagement \n via feedback", "Engagement \n with others",
+                               "Extend data", "Improve curation", "Improve flow", "Improve quality", "New data")
+# First, create the base plot with stat_ellipse()
+nmds.plot.overall.vectors <- ggplot(site.scrs, aes(x = NMDS1, y = NMDS2)) +
+  stat_ellipse(aes(group = Cluster, fill = Cluster), 
+               type = "t", level = 0.95, geom = "polygon", alpha = 0.65) +  # Filled ellipses
+  # stat_ellipse(aes(group = Cluster, colour = Cluster), type = "t", level = 0.95) +  # Outlined ellipses
+  geom_segment(data = criteria_scores, aes(x = 0, y = 0, xend = NMDS1 * scaling_factor, yend = NMDS2 * scaling_factor), 
+               arrow = arrow(length = unit(0.3, "cm")), colour = "#3E378FFF") +
+  geom_text(data = criteria_scores[1,], aes(x = NMDS1 * scaling_factor, y = NMDS2 * scaling_factor, label = Criterion), 
+            colour = "#3E378FFF", size = text_size, hjust = 1.2, vjust = 0.8) +
+  geom_text(data = criteria_scores[2,], aes(x = NMDS1 * scaling_factor, y = NMDS2 * scaling_factor, label = Criterion), 
+            colour = "#3E378FFF", size = text_size, hjust = 1, vjust = 1.5) +
+  geom_text(data = criteria_scores[4,], aes(x = NMDS1 * scaling_factor, y = NMDS2 * scaling_factor, label = Criterion), 
+            colour = "#3E378FFF", size = text_size, hjust = -0.1, vjust = 1) +
+  geom_text(data = criteria_scores[c(5,8,9),], aes(x = NMDS1 * scaling_factor, y = NMDS2 * scaling_factor, label = Criterion), 
+            colour = "#3E378FFF", size = text_size, hjust = 1, vjust = 1.5) +
+  geom_text(data = criteria_scores[c(6,7),], aes(x = NMDS1 * scaling_factor, y = NMDS2 * scaling_factor, label = Criterion), 
+            colour = "#3E378FFF", size = text_size, hjust = 1.05, vjust = -0.6) +
+  geom_text(data = criteria_scores[3,], aes(x = NMDS1 * scaling_factor, y = NMDS2 * scaling_factor, label = Criterion), 
+            colour = "#3E378FFF", size = text_size, hjust = -0.1, vjust = 0) +
+  coord_fixed() +
+  # theme_ipsum_ps() +
+  theme_minimal(base_size = 10) +
+  theme(legend.position = "none", panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  labs(fill = "Cluster") +
+  # scale_fill_viridis(discrete = TRUE, option = "H", begin = 1, end = 0, alpha = 1) +
+  scale_color_manual(values = custom_colors) +
+  xlim(c(-0.4, 0.4)) +
+  ylim(c(-0.3, 0.25))
+
+# Plot the NMDS
+# tiff("figs/clustering_nmds/nmds_kmeans_vectors.tiff", res=1000, width = 22, height = 27, units = "cm")
+# print(nmds.plot.overall.vectors)
+# dev.off()
+
+# nmds.plot.overall.vectors <- nmds.plot.overall.vectors + 
+#   theme(panel.background = element_rect(fill = "white", color = "#3E378FFF"),
+#         axis.title = element_blank(),
+#         axis.text = element_blank(),
+#         axis.ticks = element_blank(),
+#         panel.grid = element_blank())
+nmds.plot.overall.vectors <- nmds.plot.overall.vectors + theme_void() + theme(legend.position = "none")
+
+final_plot <- nmds.plot.overall +
+  inset_element(nmds.plot.overall.vectors, left = 0.65, bottom = 0.35, right = 1, top = 1.3, align_to = 'full')
+# print(final_plot)
+# # Plot the final plot
+# tiff("figs/clustering_nmds/nmds_kmeans_combined.tiff", res=1000, width = 22, height = 27, units = "cm")
+# print(final_plot)
+# dev.off()
+
+final_plot
+ggsave("figs/clustering_nmds/nmds_kmeans_combined_new.tiff", plot = final_plot, dpi = 300, width = 44, height = 27, units = "cm")
