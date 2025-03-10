@@ -10,6 +10,7 @@ library(tidyverse)  # For data manipulation and visualization
 library(ggpubr)     # For ggplot2 extensions and easy publication-ready plots
 library(hrbrthemes)
 library(viridis)
+library(systemfonts)
 
 ### ---- Function for the statistical mode ----
 Mode <- function(x) {
@@ -22,6 +23,9 @@ load("output/dat.RData")
 load("output/scores_num.RData")
 load("output/scores_num_long.RData")
 load("output/scores_tidy_long.RData")
+
+
+## ---- Section 1 - Assessors and assessments per Round and Technology ----
 
 ## ---- Assessors (Coders) per Round (Before/After) ----
 length(unique(dat$coder)) # total no. of coders
@@ -151,6 +155,8 @@ techs_round <- dat %>%
   summarise(n_assessments = n())
 table(techs_round$technology, techs_round$round) # techs per round
 length(unique(dat$technology))
+
+## ---- Section 2 - Counting Uncertainty Responses ----
 
 ## ---- Count 'I Don't Know' / 'N/A' Responses per Technology ----
 # Count occurrences of "I don't know" and "N/A" for each technology and criterion
@@ -359,6 +365,8 @@ NA_counts_complete %>%
     axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis text for readability
   )
 
+## ---- Section 3 - Basic statistics on scores ----
+
 ## ---- Basic Statistics ----
 # Calculate basic statistics for each criterion, regardless of technology
 basic_stats_criteria <- scores_num_long %>% 
@@ -420,6 +428,9 @@ results$basic_stats_tech_criteria[[2]]
 # Display the dimensions of the scores_num_long data frame
 dim(scores_num_long)
 
+
+## ---- Section 4 - Violin plots ----
+
 # Create a violin plot for rank distribution by criterion, regardless of technology
 scores_num_long %>% 
   ggplot(aes(x = criterion, y = rank)) + 
@@ -440,7 +451,6 @@ scores_num_long %>%
 #   scale_y_continuous(limits = c(1, 5))  # Set y-axis limits
 # # Uncomment to save the plot
 # # ggsave("round1/criteria_balloon.tiff", dpi = 300, compression = 'lzw')
-
 
 ## Analyses repeated for each technology
 # Group and nest the data by the 'technology' column
@@ -477,7 +487,7 @@ results <- scores_num_long %>%
         # scale_y_continuous(breaks = c(2, 6, 10, 14, 18, 22)) +  # Set y-axis breaks
         ggtitle(paste(.x$technology[1])) +
         labs(x = "Criterion", y = "Score") +  # Label axes
-        theme_ipsum_ps(axis_title_size = 10, axis = TRUE) +
+        theme_ipsum_ps(axis_title_size = 10, axis = TRUE, base_family = "IBM Plex Sans SC") +
         theme(legend.title = element_blank(), legend.position = "bottom") # Remove legend title
     })
     

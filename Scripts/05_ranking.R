@@ -5,6 +5,8 @@
 ## Revised: 2024-10-28
 #############################################+
 
+## ---- Section 1 - Loading Data and Packages ----
+
 ## ---- packages ----
 library(tidyverse)
 library(ggpubr)
@@ -18,6 +20,8 @@ library(ggrepel)
 load("output/scores_num_long.RData")
 load("output/scores_tidy_long.RData")
 source("Scripts/01a_dataexploration.R")
+
+## ---- Section 2 - Calculating Scores ----
 
 ## ---- scores tot and per criteria ----
 scores_num_long %>%
@@ -35,8 +39,8 @@ pivot_wider(scores_tech_criteria, names_from = criterion,
 # Merge on "technology"
 dati_wide <- left_join(scores_tech_criteria_wide, scores_tech, by = c("technology","no.coders"))
 
-
-as.matrix(dati_wide[,3:12]) -> mat
+# as.matrix(dati_wide[,3:12]) -> mat
+as.matrix(dati_wide[,4:13]) -> mat
 as.numeric(dati_wide$no.coders) -> dev
 plyr::aaply(mat, 2, "/", dev) -> weighted.scores # weight the scores based on the number of coders
 bind_cols(dati_wide[,1:2],
@@ -44,30 +48,32 @@ bind_cols(dati_wide[,1:2],
 # write.csv(weighted_scores_criteria, "output/weighted_scores_criteria.csv")
 # write_xlsx(weighted_scores_criteria, "output/weighted_scores_criteria.xlsx")
 
-weighted_scores_criteria %>% 
+weighted_scores_criteria %>%
   pivot_longer(cols = application:new_data,
                names_to = "criteria",
                values_to = "w.scores") -> weighted_scores_criteria_long
 
+## ---- Section 3 - Plotting Rankings ----
+
 ##---- ranking plot ----
 
 viridis(1, option = "H", begin = 0.8, end = 0) -> bar_color
-weighted_scores_criteria_long %>% 
-  ggplot(aes(reorder(technology, sum.scores), sum.scores)) + 
-  geom_bar(stat="identity", fill = bar_color) + 
-  theme_ipsum_ps(axis_title_size = 10, axis = FALSE, base_family = "IBM Plex Sans SC") +
-  coord_flip() + 
-  labs(x = "Technology", y = "Sum of scores") +
-  theme(axis.text.y = element_blank(),
-        axis.title.y = element_blank(),
-        #axis.title.x = element_blank(),
-        axis.title.x = element_text(vjust = 1, hjust = 0.5),
-        axis.text.x = element_blank(), # Simplify x-axis
-        axis.ticks.x = element_blank(),
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        legend.position = "none") -> plot_ranking_base
-plot_ranking_base
+# weighted_scores_criteria_long %>% 
+#   ggplot(aes(reorder(technology, sum.scores), sum.scores)) + 
+#   geom_bar(position="stack", stat="identity") + 
+#   theme_ipsum_ps(axis_title_size = 10, axis = FALSE, base_family = "IBM Plex Sans SC") +
+#   coord_flip() +
+#   labs(x = "Technology", y = "Sum of scores") +
+#   theme(axis.text.y = element_blank(),
+#         axis.title.y = element_blank(),
+#         #axis.title.x = element_blank(),
+#         axis.title.x = element_text(vjust = 1, hjust = 0.5),
+#         axis.text.x = element_blank(), # Simplify x-axis
+#         axis.ticks.x = element_blank(),
+#         panel.grid.major.x = element_blank(),
+#         panel.grid.minor.x = element_blank(),
+#         legend.position = "none") -> plot_ranking_base
+# plot_ranking_base
 
 weighted_scores_criteria_long %>% 
   ggplot(aes(reorder(technology, sum.scores), w.scores, fill=criteria)) + 
@@ -83,7 +89,6 @@ weighted_scores_criteria_long %>%
   guides(fill = guide_legend(nrow = 3)) -> plot_ranking
 plot_ranking
 
-# not very good
 # weighted_scores_criteria_long %>%
 #   ggplot(aes(reorder(technology, sum.scores), w.scores, fill = criteria)) + 
 #   geom_bar(position = "dodge", stat = "identity") + # Change position to dodge for grouping
@@ -158,6 +163,10 @@ weighted_scores_criteria_long %>%
 faceted_bar_plot
 # ggsave("figs/ranking_additional_plots/faceted_bar_plot.jpg")
 
+# For the faceted plot for the paper, see 08_ranking_PCA.R
+source("Scripts/08_ranking_PCA.R")
+faceted_bar_plot_PCA
+
 criteria <- sort(unique(weighted_scores_criteria_long$criteria))
 unique(bind_rows(ggplot_build(faceted_bar_plot)$data)$fill) -> criteria_col
 # viridis_pal(option = "H", begin = 1, end = 0)(length(criteria)) -> criteria_col
@@ -216,6 +225,8 @@ for(i in 1:length(criteria)) {
 #         legend.text = element_text(size = 8)) +
 #   guides(fill = guide_legend(nrow = 3)) -> grouped_facet_bar_plot
 # grouped_facet_bar_plot
+
+## ---- Section 4 - Confidence Analysis ----
 
 ##---- analyse confidence in the assessments for the final ranking ----
 
@@ -282,7 +293,7 @@ plot_violin <- ggplot(confidence_long, aes(x = reorder(technology, sum.scores), 
   
   labs(y = "Confidence level", x="") +  # Update axis labels
   
-  theme_ipsum_ps(axis_title_size = 10, axis = FALSE) +
+  theme_ipsum_ps(axis_title_size = 10, axis = FALSE, base_family = "IBM Plex Sans SC") +
   scale_fill_viridis(discrete = TRUE, option = "H", begin = 0.8, end = 0) +  # Apply fill colors
   
   # ylim(c(1, 5)) +
@@ -310,6 +321,7 @@ plot_violin <- ggplot(confidence_long, aes(x = reorder(technology, sum.scores), 
 plot_violin
 
 
+## ---- Section 5 - Combining Plots ----
 
 ##---- combine the plots side by side with patchwork ----
 library(patchwork)
@@ -320,19 +332,33 @@ combined_plot <- plot_ranking + plot_spacer() +
 # Display combined plot
 combined_plot
 
-combined_plot_heatmap <- heatmap_plot + plot_spacer() +
-  plot_ranking_base + plot_spacer() +
-  plot_violin +
-  plot_layout(ncol = 5, widths = c(3, -0.9, 1.5, -1.3, 1))
+# For the faceted plot for the paper, see 08_ranking_PCA.R
+source("Scripts/08_ranking_PCA.R")
+
+library(patchwork)
+combined_plot <- faceted_bar_plot_PCA_tiff + plot_spacer() +
+  plot_violin + #plot_spacer() +
+  #plot_balloon +
+  plot_layout(ncol = 3, widths = c(3, -0.75, 1))
 # Display combined plot
-combined_plot_heatmap
+combined_plot
+
+# combined_plot_heatmap <- heatmap_plot + plot_spacer() +
+#   plot_ranking_base + plot_spacer() +
+#   plot_violin +
+#   plot_layout(ncol = 5, widths = c(3, -0.9, 1.5, -1.3, 1))
+# # Display combined plot
+# combined_plot_heatmap
 
 # # Uncomment to save the plot
-# tiff("figs/ranking_confidence_plot_new.tiff",
+# tiff("figs/ranking_confidence_plot_PCA.tiff",
 #      height = 20, width = 20*1.365411, units = "cm", res = 300, compression = "lzw",
 #      pointsize = 6)
 # combined_plot
 # dev.off()
+
+
+## ---- Section 6 - Correlation analysis ----
 
 ##---- Test the relationship between confidence and score ----
 confidence_long %>% 
@@ -360,6 +386,8 @@ p <- plot_model(corr_model, type = "pred", terms = "median") +
 print(p)
 
 
+
+## ---- Section 7 - Heatmaps ----
 
 ##---- Heatmaps: I don't know ----
 

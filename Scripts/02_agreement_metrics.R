@@ -5,16 +5,16 @@
 ## Revised: 2024-08-26
 #############################################+
 
+## ---- Section 1 - Packages and settings ----
+
 ### ---- Load Required Packages ----
 library(irr)        # For inter-rater reliability calculations
 library(lme4)       # For linear mixed-effects models
 
-
 Round = "Before" # change this to calculate metrics for the different rounds or for the pooled assessments
 # possible values: Before, After, All
 
-
-## ---- consistency/agreement metrics per tech ----
+## ---- Section 2 - Calculate agreement metrics per technology ----
 
 # Please note:
 # We are assessing agreement/consistency for All Criteria Together:
@@ -176,6 +176,9 @@ while (i <= dim(techs)[1]) {
   i = i + 1
 } 
 
+
+## ---- Section 3 - Create and save the irr_table ----
+
 data.frame(
   technology = techs[[1]],
   icc = icc_value,
@@ -206,12 +209,11 @@ left_join(irr_table_temp, summary_coders_tech) %>%
 if(Round == "Before") write.csv(irr_table, "output/irr_table_Before_20250217.csv")
 if(Round == "After") write.csv(irr_table, "output/irr_table_After_20250217.csv")
 
-read.csv("output/irr_table_After_20250217.csv") -> prova
-
 
 ## Fleiss: a significant p-value means the stat is significantly different from 0 (agreement)
 
-##---- Check on participation to both rounds ----
+## ---- Section 4 - Check on participation to both rounds ----
+
 # Subset data for assessors who rated in both rounds
 shared_assessors_data <- scores_num_long %>% 
   filter(coder %in% intersect(unique(scores_num_long$coder[scores_num_long$round == "Before"]),

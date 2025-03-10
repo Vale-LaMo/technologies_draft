@@ -19,7 +19,7 @@ library(factoextra)
 
 load("output/scores_num_long.RData")
 load("output/scores_tidy_long.RData")
-source("Scripts/01_dataexploration.R")
+source("Scripts/01a_dataexploration.R")
 source("Scripts/05_ranking.R")
 source("Scripts/06_nmds_clustering.R")
 
@@ -90,7 +90,7 @@ ggplot(wscr_clusters, aes(y = criteria, x = w.scores)) +
 # # Uncomment to save the plot
 # ggsave("figs/ranking_additional_plots/criteria_contribution_clustercolours.jpg")
 
-# def for paper
+# def for paper - suppl
 # detailed boxplot on criteria contribution with colours from clustering
 ggplot(wscr_clusters, aes(y = reorder(criteria, w.scores, FUN = median), x = w.scores)) +
   geom_boxplot() +
@@ -119,17 +119,38 @@ ggplot(wscr_clusters, aes(y = reorder(criteria, w.scores, FUN = median), x = w.s
   scale_fill_viridis(discrete = TRUE, option = "H", begin = 1, end = 0) +
   theme(legend.position = "none") +
   scale_y_discrete(labels = rev(criteria_names)) +
+  labs(x = "Weighted score", y = "Criteria") -> contribution_criteria_suppl
+# geom_text_repel(aes(label = technology), size = 3, max.overlaps = 25) +
+# geom_text_repel(data = label_data, aes(label = technology, color = Cluster), size = 2.5)
+contribution_criteria_suppl
+# # Uncomment to save the plot
+# ggsave("figs/ranking_additional_plots/criteria_contribution_clustercolours.jpg")
+# 1.3 ratio
+tiff("figs/ranking_additional_plots/criteria_contribution_clustercolours_suppl.tiff", res=1000, width = 18, height = 14, units = "cm")
+print(contribution_criteria_suppl)
+dev.off()
+# ggsave("figs/ranking_additional_plots/criteria_contribution_clustercolours.tiff", plot = final_plot, dpi = 300, width = 22, height = 27, units = "cm")
+
+
+# def for paper
+# simple boxplot on criteria contribution
+criteria_names <- c("Extend data", "New data", "Improve data quality",
+                    "Engagement via feedback", "Audience", "Improve data flow",
+                    "Application", "Improve data curation", "Engagement with others")
+ggplot(wscr_clusters, aes(y = reorder(criteria, w.scores, FUN = median), x = w.scores)) +
+  geom_boxplot(outlier.shape = NA) +  # Boxplots without outliers
+  theme_minimal(base_size = 10) +
+  theme(legend.position = "none") +
+  scale_y_discrete(labels = rev(criteria_names)) +
   labs(x = "Weighted score", y = "Criteria") -> contribution_criteria
 # geom_text_repel(aes(label = technology), size = 3, max.overlaps = 25) +
 # geom_text_repel(data = label_data, aes(label = technology, color = Cluster), size = 2.5)
 contribution_criteria
 # # Uncomment to save the plot
-# ggsave("figs/ranking_additional_plots/criteria_contribution_clustercolours.jpg")
 # 1.3 ratio
-tiff("figs/ranking_additional_plots/criteria_contribution_clustercolours.tiff", res=1000, width = 18, height = 14, units = "cm")
+tiff("figs/criteria_contribution.tiff", res=1000, width = 18, height = 14, units = "cm")
 print(contribution_criteria)
 dev.off()
-# ggsave("figs/ranking_additional_plots/criteria_contribution_clustercolours.tiff", plot = final_plot, dpi = 300, width = 22, height = 27, units = "cm")
 
 
 ##---- check if medians (or means) are statistically different

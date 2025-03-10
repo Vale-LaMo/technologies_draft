@@ -6,6 +6,8 @@
 ## Revised: 2024-10-28
 #############################################+
 
+## ---- Section 1 - Setup ----
+
 ### ---- Load Required Packages ----
 library(dplyr)
 library(ggplot2)
@@ -19,7 +21,7 @@ source("Scripts/03_agreement_metrics_regressionmodels.R")
 ymin = -0.5
 # ymax = 1
 
-### ---- ICC Plots ----
+### ---- Section 2 - ICC Plots ----
 
 # Create a boxplot for ICC values - it's the baseline plot, showing also the outliers
 ggplot(irr_table_combined, aes(x = Round, y = icc, col = Round)) +

@@ -6,6 +6,8 @@
 ## Revised: 2024-10-28
 #############################################+
 
+## ---- Section 1 - Setup and data preparation ----
+
 ##---- Setup ----
 # Load necessary packages
 library(MASS)         # For Box-Cox transformation
@@ -30,7 +32,9 @@ irr_table_combined <- bind_rows(
 )
 irr_table_combined$Round <- factor(irr_table_combined$Round, levels = c("Before", "After"))
 
-##---- Data Exploration ----
+
+## ---- Section 2 - Data Exploration ----
+
 # Plot histograms to check distribution of the metrics
 hist(irr_table_combined$kripp, main = "Krippendorff's Alpha")  # Distribution looks normal
 hist(irr_table_combined$fleiss, main = "Fleiss' Kappa")        # Distribution looks normal
@@ -41,6 +45,9 @@ cor(irr_table_combined$icc, irr_table_combined$kripp, use = "complete.obs")
 cor(irr_table_combined$icc, irr_table_combined$fleiss, use = "complete.obs")
 cor(irr_table_combined$fleiss, irr_table_combined$kripp, use = "complete.obs")
 # Result: relatively high correlation between metrics
+
+
+## ---- Section 3 - Mixed modelling ----
 
 ##---- Reshape Data for Mixed-Effects Modeling ----
 # Convert to long format for easier modeling with ICC transformed variable

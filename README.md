@@ -16,46 +16,48 @@ This folder contains the main scripts for the analyses (note that the preliminar
 Assessments were collected before the workshop discussion (individual assessments - each coder rated a certain number of technologies without consultation with others), and after a panel discussion about each technology (consensus building phase). The data are thus divided into 2 rounds (before and after the workshop).
 
 ### Data exploration
-01_dataexploration.R : performs exploratory data analyses on the technology assessments dataset, focusing on the number of coders and responses indicating uncertainty (e.g., "I don't know" or "N/A"). 
+01a_dataexploration.R : performs exploratory data analyses on the technology assessments dataset, focusing on the number of coders and responses indicating uncertainty (e.g., "I don't know" or "N/A"). 
 
-1. **Assessors per Technology**: 
-   - The code groups the dataset by technology and counts the number of coders for each technology.
-   - It generates a bar plot to visualize the number of coders, using a color gradient to represent the count.
+1. **Assessors and assessments per Round and Technology**: 
+   - The code groups the dataset by round and technology and counts the number of coders for each round and technology, it identifies the coders that took part in both rounds and checks if they rated different technologies (see also Agreement metrics for the issue of coders involved in both rounds).
+   - It generates a bar plot to visualize the number of coders, using a color gradient to represent the count - the analysis is repeated for each round.
+   - The code also calculate the number of assessments and technologies in each round.
 
 2. **Counting Uncertainty Responses**: 
    - It counts occurrences of "I don't know" and "N/A" responses for each technology and criterion.
-   - The total counts are summarized and visualized using bar plots, including a stacked bar plot to show detailed counts by rank.
+   - The total counts are summarized and visualized using bar plots, including a stacked bar plot to show detailed counts by rank. The analyses are also repetead for each round.
 
 3. **Basic Statistics Calculation**: 
    - The code calculates basic statistics (minimum, maximum, mean, median, quartiles, and mode) for each criterion and by technology.
    - It nests the data by round to perform similar analyses for each assessment round.
 
-4. **Visualizations**: 
-   - The code generates various plots, including violin plots to show the distribution of ranks by criterion and balloon plots for frequency of ranks.
+4. **Violin plots**: 
+   - The code generates various plots, including violin plots to show the distribution of ranks by criterion.
    - It allows for saving the plots to files for further use.
-   - The last plots provide a comparison between rounds for each technology
+   - The last plots provide a comparison between rounds for each technology.
+   
+01b_dataexploration_criteria.R : performs exploratory data analyses, focusing on the number of coders and responses indicating uncertainty (e.g., "I don't know" or "N/A") per criterion. 
 
 
 ### Agreement metrics
 
 02_agreement_metrics.R: calculates various metrics of agreement between experts for different technologies. Here's a breakdown of what the code does:
 
-1. **Load required packages**: The code loads the irr package for inter-rater reliability calculations and the lme4 package for linear mixed-effects models.
+1. **Load required packages and set the Round variable**: The code loads the irr package for inter-rater reliability calculations and the lme4 package for linear mixed-effects models.
+The code allows you to calculate metrics for different rounds (Before, After) or for all assessments (All).
 
-2. **Set the Round variable**: The code allows you to calculate metrics for different rounds (Before, After) or for all assessments (All).
-
-3. **Calculate agreement metrics per technology**: The code iterates through each unique technology in the scores_num data frame. For each technology, it creates a scores matrix by selecting relevant columns from the scores_num data frame based on the Round variable. 
+2. **Calculate agreement metrics per technology**: The code iterates through each unique technology in the scores_num data frame. For each technology, it creates a scores matrix by selecting relevant columns from the scores_num data frame based on the Round variable. 
 It calculates the following metrics:
   - Fleiss' kappa: A measure of inter-rater agreement for multiple raters. The code checks for NAs and calculates the kappa value, z-score, and p-value.
   - Intraclass correlation coefficient (ICC): A measure of reliability. The code checks for NAs and calculates the ICC value, lower bound, and upper bound.
   - Krippendorff's alpha: A measure of inter-rater reliability. The code checks for NAs and calculates the alpha value and the number of raters.
   - The code also performs an ANOVA test to check for significant differences between coders for each criterion. It fits a linear mixed-effects model and performs the ANOVA test. If the F-value is significant (p < 0.05), it stores "< 0.05" in the p_anova vector.
 
-4. **Create the irr_table**: The code creates a data frame irr_table_temp with the calculated metrics for each technology. It then joins this table with the summary_coders_tech data frame to add the number of coders per technology.
+3. **Create and save the irr_table**: The code creates a data frame irr_table_temp with the calculated metrics for each technology. It then joins this table with the summary_coders_tech data frame to add the number of coders per technology.
+Finally, the code saves the irr_table as a CSV file in the output directory. The file name depends on the value of the Round variable.
 
-5. **Save the irr_table**: Finally, the code saves the irr_table as a CSV file in the output directory. The file name depends on the value of the Round variable.
+4. **Check on participation to both rounds**: The code subset data for assessors who rated in both rounds and fits a mixed model for ranks with round as a fixed effect and assessor as a random effect, testing for interaction. The analysis aims at assessing whether the effect of the assessors is consistent across the rounds.
 
-The code provides a comprehensive analysis of agreement between experts for different technologies, allowing to assess the reliability of the assessments and identify any significant differences between coders.
 
 ### Regression analyses on agreement metrics
 
@@ -72,26 +74,23 @@ The tables are combined into a single data frame, irr_table_combined, with an ad
 
 04_agreement_metrics_plot.R: This script focuses on visualizing agreement metrics across different rounds of assessment.
 
-1. **Setup and Library Loading**: The script begins by loading essential packages for plotting and color schemes, such as `ggplot2` for data visualization and `viridis` for color scaling, along with `hrbrthemes` for theme customization.
-
-2. **Data Preparation**: It reads in a data file with combined agreement metrics, allowing for the separation of values by rounds of assessment.
+1. **Setup**: The script begins by loading essential packages for plotting and color schemes, such as `ggplot2` for data visualization and `viridis` for color scaling, along with `hrbrthemes` for theme customization. It also runs the 03_agreement_metrics_regressionmodels.R script.
    
-3. **Plot Creation for Agreement Metrics**: Boxplots and scatter (jitter) plots are created for each metric (ICC, Krippendorff’s Alpha, and Fleiss’ Kappa), showing the distribution across rounds.
+2. **Plot Creation for Agreement Metrics**: Boxplots and scatter (jitter) plots are created for each metric (ICC, Krippendorff’s Alpha, and Fleiss’ Kappa), showing the distribution across rounds.
    - Each plot includes:
       - **Boxplots without outliers** for visual clarity.
       - **Jittered points** to reveal individual data values within each round.
       - **Threshold Reference Lines** indicating standard cutoffs for interpretation (e.g., "Poor," "Fair," "Good," "Excellent" for ICC) to contextualize metric reliability.
       - **Annotations** on the plot's right side label thresholds for easy interpretation.
 
-4. **Color and Style Customization**: The script uses the `viridis` color palette, which is colorblind-friendly, to color the plots by assessment rounds. The plot titles and labels are likely customized using themes from `hrbrthemes` to ensure consistency and readability.
 
 
 ### Ranking of technologies and confidence in the assessments
 
 05_ranking.R: This R script performs data processing, visualization, and analysis for ranking technologies based on specific criteria. 
 
-1. **Loading Data and Libraries**:
-   - Essential libraries (`tidyverse`, `ggpubr`, `hrbrthemes`, `viridis`, and `writexl`) are loaded to manage data and create plots.
+1. **Loading Data and Packages**:
+   - Essential packages (`tidyverse`, `ggpubr`, `hrbrthemes`, `viridis`, and `writexl`) are loaded to manage data and create plots.
    - Data files (`scores_num_long` and `scores_tidy_long`) are loaded to access rankings and criteria scores.
 
 2. **Calculating Scores**:
@@ -99,7 +98,7 @@ The tables are combined into a single data frame, irr_table_combined, with an ad
    - A weighted score per criterion is computed by dividing scores by the number of coders, resulting in a normalized dataset (`weighted_scores_criteria`).
 
 3. **Plotting Rankings**:
-   - A stacked bar chart visualizes each technology’s score across criteria, colored using the `viridis` palette for clear differentiation.
+   - Several plots are created to visualizes each technology’s score across criteria, colored using the `viridis` palette for clear differentiation.
 
 4. **Confidence Analysis**:
    - Confidence levels of coders are analyzed using responses from `coders_confidence_level.csv`.
@@ -111,11 +110,9 @@ The tables are combined into a single data frame, irr_table_combined, with an ad
 6. **Correlation Analysis**:
    - A Spearman correlation is calculated between the median confidence level and technology score, with a regression model (linear model) fitted to illustrate the relationship.
 
-7. **Heatmap for 'I Don't Know'/NA Responses**:
+7. **Heatmaps for 'I Don't Know'/NA Responses**:
    - Technologies with "I Don't Know"/NA responses are analyzed, generating heatmaps to show these responses across criteria. This helps in identifying areas where coders were uncertain.
 
-8. **Saving and Output**:
-   - Each plot can be saved as `.tiff` files if uncommented. The script produces an insightful visualization suite for understanding technology rankings, coder confidence, and areas of uncertainty. 
 
 
 #### Clustering on weighted scores
