@@ -79,8 +79,21 @@ custom_colors <- c(
 weighted_scores_criteria_long_facets <- weighted_scores_criteria_long_facets %>%
   mutate(criteria = factor(criteria, levels = names(custom_colors)))
 
-ggplot(weighted_scores_criteria_long_facets, aes(x = w.scores, y = reorder(technology, sum.scores), fill = criteria)) +
-  geom_bar(stat = "identity", width = 0.8) +  # Stacked bar
+reference_group <- "Data improvement"
+ordered_techs <- weighted_scores_criteria_long_facets %>%
+  filter(criteria_group == reference_group) %>%
+  arrange(criteria_group_sum) %>%
+  pull(technology) %>%
+  unique()
+weighted_scores_criteria_long_facets$technology <- factor(
+  weighted_scores_criteria_long_facets$technology,
+  levels = ordered_techs
+)
+
+ggplot(weighted_scores_criteria_long_facets, aes(x = w.scores, y = technology, fill = criteria)) +
+  geom_bar(stat = "identity", width = 0.8) +
+# ggplot(weighted_scores_criteria_long_facets, aes(x = w.scores, y = reorder(technology, criteria_group_sum), fill = criteria)) +
+#   geom_bar(stat = "identity", width = 0.8) +  # Stacked bar
   scale_fill_manual(values = custom_colors, # Apply custom colors
   # scale_fill_viridis_d(option = "H", begin = 1, end = 0,
                        labels = c("New data", "Improve data quality", "Improve data flow", "Extend data", "Improve data curation",
