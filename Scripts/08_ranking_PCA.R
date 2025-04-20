@@ -80,6 +80,7 @@ weighted_scores_criteria_long_facets <- weighted_scores_criteria_long_facets %>%
   mutate(criteria = factor(criteria, levels = names(custom_colors)))
 
 reference_group <- "Data improvement"
+reference_group <- "Engagement and application"
 ordered_techs <- weighted_scores_criteria_long_facets %>%
   filter(criteria_group == reference_group) %>%
   arrange(criteria_group_sum) %>%
@@ -116,6 +117,22 @@ ggplot(weighted_scores_criteria_long_facets, aes(x = w.scores, y = technology, f
   guides(fill = guide_legend(nrow = 3)) -> faceted_bar_plot_PCA
 faceted_bar_plot_PCA
 # ggsave("figs/ranking_additional_plots/faceted_bar_plot_gr.jpg")
+
+cor_table <- weighted_scores_criteria_long_facets %>% 
+  dplyr::select(technology, criteria_group, criteria_group_sum) %>% 
+  pivot_wider(names_from = criteria_group, values_from = criteria_group_sum, values_fn = mean)
+cor(cor_table$`Engagement and application`, cor_table$`Data improvement`, method = c("spearman"))
+cor.test(cor_table$`Engagement and application`, cor_table$`Data improvement`, method = c("spearman"))
+
+
+ggplot(cor_table, aes(x = `Data improvement`, y = `Engagement and application`, label = technology)) +
+  geom_point() +
+  geom_text(hjust = 1, vjust = 1, size = 2.5) +
+  theme_minimal()
+
+model <- lm(`Engagement and application` ~ `Data improvement`, data = cor_table)
+summary(model)
+
 
 # for the tiff image
 ggplot(weighted_scores_criteria_long_facets, aes(x = w.scores, y = reorder(technology, sum.scores), fill = criteria)) +
